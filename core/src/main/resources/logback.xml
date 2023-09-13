@@ -1,0 +1,116 @@
+<configuration>
+  <appender class="ch.qos.logback.core.ConsoleAppender" name="stdout">
+    <encoder charset="UTF-8">
+      <pattern>%d{yyyy-MM-dd HH:mm:ss} %5p %c:%L %m%n</pattern>
+    </encoder>
+  </appender>
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="FILE">
+    <!-- 指定日志文件的名称 -->
+    <file>${LOG_HOME}/${APP_NAME}.log</file>
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [ %thread ] - [ %-5level ] [ %logger{50} : %line ] -
+        %msg%n
+      </pattern>
+    </layout>
+    <!--
+    日志输出格式：%d表示日期时间，%thread表示线程名，%-5level：级别从左显示5个字符宽度 %logger{50} 表示logger名字最长50个字符，否则按照句点分割。 %msg：日志消息，%n是换行符
+    -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!--
+      滚动时产生的文件的存放位置及文件名称 %d{yyyy-MM-dd}：按天进行日志滚动
+      %i：当文件大小超过maxFileSize时，按照i进行文件滚动
+      -->
+      <MaxHistory>180</MaxHistory>
+      <fileNamePattern>${LOG_HOME}/logbacks/${APP_NAME}-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+      <!--
+      当日志文件超过maxFileSize指定的大小是，根据上面提到的%i进行日志文件滚动 -->
+      <maxFileSize>30MB</maxFileSize>
+    </rollingPolicy>
+  </appender>
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="errorAppender">
+    <!-- 指定日志文件的名称 -->
+    <file>${LOG_HOME}/${APP_NAME}-error.log</file>
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <!--只匹配ERROR级别日志-->-->
+      <level>ERROR</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [ %thread ] - [ %-5level ] [ %logger{50} : %line ] -
+        %msg%n
+      </pattern>
+    </layout>
+    <!--
+    日志输出格式：%d表示日期时间，%thread表示线程名，%-5level：级别从左显示5个字符宽度 %logger{50} 表示logger名字最长50个字符，否则按照句点分割。 %msg：日志消息，%n是换行符
+    -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!--
+      滚动时产生的文件的存放位置及文件名称 %d{yyyy-MM-dd}：按天进行日志滚动
+      %i：当文件大小超过maxFileSize时，按照i进行文件滚动
+      -->
+      <MaxHistory>180</MaxHistory>
+      <fileNamePattern>${LOG_HOME}/logbacks/${APP_NAME}-error-%d{yyyy-MM-dd}-%i.log
+      </fileNamePattern>
+      <!-- 当日志文件超过maxFileSize指定的大小是，根据上面提到的%i进行日志文件滚动 -->
+      <maxFileSize>30MB</maxFileSize>
+    </rollingPolicy>
+  </appender>
+  <!-- 控制台日志输出 -->
+  <appender class="ch.qos.logback.core.rolling.RollingFileAppender" name="infoAppender">
+    <!-- 指定日志文件的名称 -->
+    <file>${LOG_HOME}/${APP_NAME}-info.log</file>
+    <!--只输出INFO-->
+    <filter class="ch.qos.logback.classic.filter.LevelFilter">
+      <!--只匹配INFO级别日志-->
+      <level>INFO</level>
+      <onMatch>ACCEPT</onMatch>
+      <onMismatch>DENY</onMismatch>
+    </filter>
+    <layout class="ch.qos.logback.classic.PatternLayout">
+      <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} [ %thread ] - [ %-5level ] [ %logger{50} : %line ] -
+        %msg%n
+      </pattern>
+    </layout>
+    <!--
+    日志输出格式：%d表示日期时间，%thread表示线程名，%-5level：级别从左显示5个字符宽度 %logger{50} 表示logger名字最长50个字符，否则按照句点分割。 %msg：日志消息，%n是换行符
+    -->
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <!--
+      滚动时产生的文件的存放位置及文件名称 %d{yyyy-MM-dd}：按天进行日志滚动
+      %i：当文件大小超过maxFileSize时，按照i进行文件滚动
+      -->
+      <MaxHistory>180</MaxHistory>
+      <fileNamePattern>${LOG_HOME}/logbacks/${APP_NAME}-info-%d{yyyy-MM-dd}-%i.log</fileNamePattern>
+      <!-- 当日志文件超过maxFileSize指定的大小是，根据上面提到的%i进行日志文件滚动 -->
+      <maxFileSize>30MB</maxFileSize>
+    </rollingPolicy>
+  </appender>
+  <!-- 滚动记录文件，先将日志记录到指定文件，当符合某个条件时，将日志记录到其他文件 -->
+  <contextName>${APP_NAME}</contextName>
+  <logger level="info" name="org.asynchttpclient"/>
+  <!--  <logger name="io.netty" level="info" />-->
+  <logger level="info" name="org.redisson"/>
+  <!-- root是所有logger的父级，当logger的additivity=false时，logger管理的日志不再父级传递 -->
+  <!--root的level尽量高一些，logger的级别必须低于root的级别才能输出-->
+  <!--ALL > TRACE > FATAL > DEBUG > INFO > WARN > ERROR > OFF-->
+  <logger additivity="false" name="com.example">
+    <appender-ref ref="infoAppender"/>
+    <appender-ref ref="errorAppender"/>
+  </logger>
+
+  <!--appender和logger一起使用-->
+
+  <!--appender的name可以随意指定，被logger的appender-ref标签引用-->
+  <property name="APP_NAME" value="gatewayServer"/>
+  <property name="LOG_HOME" value="/logs/gateway"/>
+
+  <!--logger的name作为匹配包名的作用-->
+  <!--当java代码中LoggerFactory.getLogger(XX.class);匹配该XX的类名-->
+  <!--当java代码中LoggerFactory.getLogger("loggername");时，name属性直接写loggername-->
+  <root level="DEBUG">
+    <appender-ref ref="stdout"/>
+    <appender-ref ref="FILE"/>
+  </root>
+
+</configuration>

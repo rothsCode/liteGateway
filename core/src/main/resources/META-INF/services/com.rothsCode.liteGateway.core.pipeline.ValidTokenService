@@ -1,0 +1,2 @@
+#默认的实现token校验实现类
+com.rothsCode.liteGateway.core.plugin.auth.JWTValidTokenService
