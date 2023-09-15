@@ -9,7 +9,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.stream.Collectors;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 /**
@@ -17,13 +18,13 @@ import lombok.extern.slf4j.Slf4j;
  * @Description: 基于责任链模式的处理链执行器
  * @date 2022/7/30 18:00
  */
-@Slf4j
 public class HandlerChainEngine {
 
+  public static final Logger log = LoggerFactory.getLogger(HandlerChainEngine.class);
   /**
    * 处理事件
    */
-  private List<HandlerEvent> chainList;
+  private static List<HandlerEvent> chainList;
 
   /**
    * 过滤当前类型的事件
@@ -65,8 +66,8 @@ public class HandlerChainEngine {
    *
    * @param handlerContext
    */
-  public void processEvent(HandlerContext handlerContext) {
-    if (this.chainList.size() > 0) {
+  public static void processEvent(HandlerContext handlerContext) {
+    if (chainList.size() > 0) {
       Object handleHead = handlerContext.getObject(HandleParamTypeEnum.HANDLE_HEAD_INDEX.getCode());
       int handleHeadIndex = 0;
       if (handleHead != null) {

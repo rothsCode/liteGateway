@@ -36,7 +36,7 @@ public class FileLogClient implements Plugin, LogReporter {
   @Override
   public void init() {
     fileAppender = new FileAppender(serverConfig.getFileStorePath(), serverConfig.getLogFileName());
-    LOGGER.info("has init");
+    LOGGER.info("FileLogClient has been initialized");
   }
 
   @Override

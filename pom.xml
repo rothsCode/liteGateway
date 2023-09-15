@@ -14,25 +14,42 @@
       </plugin>
     </plugins>
   </build>
-  <dependencies>
-    <dependency>
-      <artifactId>junit</artifactId>
-      <groupId>junit</groupId>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <artifactId>lombok</artifactId>
-      <groupId>org.projectlombok</groupId>
-      <version>${lombok.version}</version>
-    </dependency>
-    <dependency>
-      <artifactId>mapstruct</artifactId>
-      <groupId>org.mapstruct</groupId>
-      <version>${mapstruct.version}</version>
-    </dependency>
-  </dependencies>
+
   <dependencyManagement>
     <dependencies>
+      <!--dubbo-->
+      <dependency>
+        <artifactId>dubbo</artifactId>
+        <exclusions>
+          <exclusion>
+            <artifactId>spring-context</artifactId>
+            <groupId>org.springframework</groupId>
+          </exclusion>
+        </exclusions>
+        <groupId>org.apache.dubbo</groupId>
+        <version>${dubbo.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>dubbo-serialization-kryo</artifactId>
+        <groupId>org.apache.dubbo</groupId>
+        <version>${dubbo.version}</version>
+      </dependency>
+
+      <dependency>
+        <artifactId>junit</artifactId>
+        <groupId>junit</groupId>
+        <version>${junit.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>lombok</artifactId>
+        <groupId>org.projectlombok</groupId>
+        <version>${lombok.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>mapstruct</artifactId>
+        <groupId>org.mapstruct</groupId>
+        <version>${mapstruct.version}</version>
+      </dependency>
       <!-- 网络依赖 -->
       <dependency>
         <artifactId>netty-all</artifactId>
@@ -60,16 +77,6 @@
         <artifactId>guava</artifactId>
         <groupId>com.google.guava</groupId>
         <version>${guava.version}</version>
-      </dependency>
-      <dependency>
-        <artifactId>commons-lang3</artifactId>
-        <groupId>org.apache.commons</groupId>
-        <version>3.7</version>
-      </dependency>
-      <dependency>
-        <artifactId>commons-beanutils</artifactId>
-        <groupId>commons-beanutils</groupId>
-        <version>1.9.3</version>
       </dependency>
       <dependency>
         <artifactId>disruptor</artifactId>
@@ -107,12 +114,6 @@
         <version>${jsonpath.version}</version>
       </dependency>
       <dependency>
-        <artifactId>oshi-core</artifactId>
-        <groupId>com.github.oshi</groupId>
-        <version>3.5.0</version>
-      </dependency>
-
-      <dependency>
         <artifactId>kafka-clients</artifactId>
         <groupId>org.apache.kafka</groupId>
         <version>${kafka.version}</version>
@@ -124,57 +125,115 @@
         <scope>test</scope>
         <version>${junit.version}</version>
       </dependency>
+      <!--prometheus client-->
+      <dependency>
+        <artifactId>simpleclient</artifactId>
+        <groupId>io.prometheus</groupId>
+        <version>${prometheus.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>simpleclient_hotspot</artifactId>
+        <groupId>io.prometheus</groupId>
+        <version>${prometheus.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>simpleclient_httpserver</artifactId>
+        <groupId>io.prometheus</groupId>
+        <version>${prometheus.version}</version>
+      </dependency>
+
+      <dependency>
+        <artifactId>redisson</artifactId>
+        <groupId>org.redisson</groupId>
+        <version>${redisson.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>nacos-client</artifactId>
+        <groupId>com.alibaba.nacos</groupId>
+        <version>${nacos.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>hutool-all</artifactId>
+        <groupId>cn.hutool</groupId>
+        <version>${hutool.version}</version>
+      </dependency>
+
+      <!--slf4j统一日志接口依赖包-->
+      <dependency>
+        <artifactId>slf4j-api</artifactId>
+        <groupId>org.slf4j</groupId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <!--logback依赖包-->
+      <dependency>
+        <artifactId>logback-core</artifactId>
+        <groupId>ch.qos.logback</groupId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>logback-classic</artifactId>
+        <groupId>ch.qos.logback</groupId>
+        <version>${logback.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>commons-lang3</artifactId>
+        <groupId>org.apache.commons</groupId>
+        <version>${commons-lang3.version}</version>
+      </dependency>
     </dependencies>
   </dependencyManagement>
+
   <groupId>com.rothsCode</groupId>
 
   <modelVersion>4.0.0</modelVersion>
 
-  <!-- dependencyManagement -->
   <modules>
     <module>core</module>
     <module>common</module>
     <module>client</module>
     <module>test</module>
   </modules>
-
-
   <packaging>pom</packaging>
-
 
   <properties>
     <async-http-client.version>2.0.37</async-http-client.version>
     <biz.paluch.redis.version>4.4.6.Final</biz.paluch.redis.version>
     <caffeine.version>2.8.5</caffeine.version>
+    <commons-lang3.version>3.12.0</commons-lang3.version>
     <dubbo.version>2.7.4.1</dubbo.version>
     <fastjson.verson>1.2.76</fastjson.verson>
     <guava.version>25.1-jre</guava.version>
+    <hutool.version>5.8.2</hutool.version>
     <jackson.version>2.12.3</jackson.version>
     <java.encoding>UTF-8</java.encoding>
     <java.source.version>1.8</java.source.version>
     <java.target.version>1.8</java.target.version>
     <jsonpath.version>2.4.0</jsonpath.version>
     <junit.version>4.12</junit.version>
-    <kafka.version>2.3.1</kafka.version>
+    <kafka.version>3.2.0</kafka.version>
     <lmax.version>3.3.4</lmax.version>
     <log4j2.version>2.11.1</log4j2.version>
+    <logback.version>1.1.7</logback.version>
     <lombok.version>1.18.0</lombok.version>
     <mapstruct.version>1.2.0.Final</mapstruct.version>
     <maven.compiler.version>3.8.0</maven.compiler.version>
-    <!--2.7.3 Build -->
     <maven.deploy.version>2.8.2</maven.deploy.version>
     <maven.jar.version>3.1.0</maven.jar.version>
     <maven.javadoc.skip>true</maven.javadoc.skip>
     <maven.release.version>2.5.3</maven.release.version>
+    <!--2.7.3 Build -->
     <maven.source.version>3.0.1</maven.source.version>
     <maven.surefire.version>2.21.0</maven.surefire.version>
+    <nacos.version>1.4.2</nacos.version>
     <netty.version>4.1.44.Final</netty.version>
     <oshi.verison>3.5.0</oshi.verison>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <prometheus.version>0.11.0</prometheus.version>
     <protobuf.version>3.7.1</protobuf.version>
+    <redisson.version>3.12.0</redisson.version>
+    <slf4j.version>1.7.5</slf4j.version>
     <slf4j.version>1.7.25</slf4j.version>
   </properties>
 
   <version>1.0.0</version>
-
 </project>

@@ -1,7 +1,7 @@
 package com.rothsCode.liteGateway.core.nettyServer.requestProcess;
 
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
-import com.rothsCode.liteGateway.core.Context.GatewayContextStatusEnum;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
+import com.rothsCode.liteGateway.core.container.Context.RequestWriteStatusEnum;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerChainEngineFactory;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
@@ -19,7 +19,7 @@ public class NettyDefaultRequestProcess implements NettyRequestProcess {
 
   @Override
   public void processRequest(GatewayContext gatewayContext) {
-    gatewayContext.setStatus(GatewayContextStatusEnum.PROCESSING);
+    gatewayContext.setWriteStatus(RequestWriteStatusEnum.PROCESSING);
     String traceId = SnowFlake.generateIdStr();
     MdcUtil.setTraceId(traceId);
     gatewayContext.setTraceId(traceId);

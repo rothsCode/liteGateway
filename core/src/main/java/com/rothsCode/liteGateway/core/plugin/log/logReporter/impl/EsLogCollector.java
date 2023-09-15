@@ -32,7 +32,7 @@ public class EsLogCollector implements Plugin, LogReporter {
 
   @Override
   public void init() {
-    LOGGER.info("has init");
+    LOGGER.info("EsLogCollector has been initialized");
   }
 
   @Override

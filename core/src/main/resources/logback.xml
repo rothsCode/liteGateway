@@ -1,4 +1,7 @@
 <configuration>
+  <!--appender的name可以随意指定，被logger的appender-ref标签引用-->
+  <logger level="debug" name="io.netty"/>
+  <property name="LOG_HOME" value="/root/logs/gateway"/>
   <appender class="ch.qos.logback.core.ConsoleAppender" name="stdout">
     <encoder charset="UTF-8">
       <pattern>%d{yyyy-MM-dd HH:mm:ss} %5p %c:%L %m%n</pattern>
@@ -89,7 +92,7 @@
   <!-- 滚动记录文件，先将日志记录到指定文件，当符合某个条件时，将日志记录到其他文件 -->
   <contextName>${APP_NAME}</contextName>
   <logger level="info" name="org.asynchttpclient"/>
-  <!--  <logger name="io.netty" level="info" />-->
+  <property name="APP_NAME" value="gatewayServer"/>
   <logger level="info" name="org.redisson"/>
   <!-- root是所有logger的父级，当logger的additivity=false时，logger管理的日志不再父级传递 -->
   <!--root的level尽量高一些，logger的级别必须低于root的级别才能输出-->
@@ -98,12 +101,6 @@
     <appender-ref ref="infoAppender"/>
     <appender-ref ref="errorAppender"/>
   </logger>
-
-  <!--appender和logger一起使用-->
-
-  <!--appender的name可以随意指定，被logger的appender-ref标签引用-->
-  <property name="APP_NAME" value="gatewayServer"/>
-  <property name="LOG_HOME" value="/logs/gateway"/>
 
   <!--logger的name作为匹配包名的作用-->
   <!--当java代码中LoggerFactory.getLogger(XX.class);匹配该XX的类名-->

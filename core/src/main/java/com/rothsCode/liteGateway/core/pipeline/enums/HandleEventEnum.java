@@ -4,7 +4,6 @@ package com.rothsCode.liteGateway.core.pipeline.enums;
  * rothscode 事件类型枚举
  */
 public enum HandleEventEnum {
-  PRE_REQUEST_LOG("preRequestLog", 0, "httpRequest", "记录请求开始时日志事件"),
   RATE_LIMIT_EVENT("rateLimit", 1, "httpRequest", "请求限流事件"),
   PARSE_REQUEST("parseRequest", 2, "httpRequest", "解析请求参数事件"),
   VALID_REQUEST("validRequest", 3, "httpRequest", "请求参数校验事件"),

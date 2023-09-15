@@ -1,4 +1,4 @@
-package com.rothsCode.liteGateway.core.quene;
+package com.rothsCode.liteGateway.core.plugin.process.quene;
 
 
 public interface Flusher<E> {

@@ -1,7 +1,7 @@
 package com.rothsCode.liteGateway.core.pipeline.httpEvent;
 
 import cn.hutool.core.lang.Assert;
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
 import com.rothsCode.liteGateway.core.model.ServiceInfo;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;

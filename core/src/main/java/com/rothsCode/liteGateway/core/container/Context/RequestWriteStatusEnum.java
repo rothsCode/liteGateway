@@ -1,4 +1,4 @@
-package com.rothsCode.liteGateway.core.Context;
+package com.rothsCode.liteGateway.core.container.Context;
 
 import lombok.Getter;
 
@@ -8,16 +8,17 @@ import lombok.Getter;
  * @date 2023/8/16 12:05
  */
 @Getter
-public enum GatewayContextStatusEnum {
+public enum RequestWriteStatusEnum {
 
   ENTER(1, "请求进入网关"),
   PROCESSING(2, "事件执行中"),
-  WRITE_FLUSH(3, "响应写回"),
-  END(4, "网关请求结束");
+  WRITE(3, "响应写入到socket缓存"),
+  FLUSH_ERROR(4, "数据发送报错"),
+  FLUSH_SUCCESS(5, "数据发送成功");
   private int code;
   private String desc;
 
-  GatewayContextStatusEnum(int code, String desc) {
+  RequestWriteStatusEnum(int code, String desc) {
     this.code = code;
     this.desc = desc;
   }

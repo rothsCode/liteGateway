@@ -1,7 +1,7 @@
 package com.rothsCode.liteGateway.core.pipeline.core;
 
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
-import com.rothsCode.liteGateway.core.Context.GatewayContextStatusEnum;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
+import com.rothsCode.liteGateway.core.container.Context.RequestWriteStatusEnum;
 import com.rothsCode.liteGateway.core.exception.GatewayException;
 import com.rothsCode.liteGateway.core.exception.GatewayRequestStatusEnum;
 import com.rothsCode.liteGateway.core.model.Result;
@@ -35,21 +35,26 @@ public abstract class HandlerEvent implements IHandlerEvent<HandlerContext> {
     return next;
   }
 
+  public HandlerEvent postProcess;
+
   /**
    * 获取后置处理器 默认PROXY_ROUTE_EVENT之后的事件都为后置事件
    *
    * @return
    */
   public HandlerEvent getPostProcess() {
-    while (next != null && !next.handleEvent().equals(HandleEventEnum.PROXY_ROUTE_EVENT)) {
-      if (null != next) {
-        next = next.next;
-      }
+    if (postProcess != null) {
+      return postProcess;
     }
-    if (next == null) {
+    HandlerEvent temNext = next;
+    while (temNext != null && !temNext.handleEvent().equals(HandleEventEnum.PROXY_ROUTE_EVENT)) {
+      temNext = temNext.next;
+    }
+    if (temNext == null) {
       return null;
     }
-    return next.next;
+    postProcess = temNext.next;
+    return postProcess;
   }
 
   /**
@@ -63,6 +68,12 @@ public abstract class HandlerEvent implements IHandlerEvent<HandlerContext> {
     try {
       continueFlag = this.actualProcess(t);
     } catch (Throwable e) {
+      //重复响应判断 如果请求已响应则是后置事件产生的错误,打印错误即可
+      GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
+      if (RequestWriteStatusEnum.WRITE.equals(gatewayContext.getWriteStatus())) {
+        log.error("postChain error:{}", e);
+        return;
+      }
       String message = GatewayRequestStatusEnum.INTERNAL_ERROR.getDesc();
       if (StringUtils.isNotBlank(e.getMessage())) {
         if (e.getMessage().length() > 100) {
@@ -76,12 +87,8 @@ public abstract class HandlerEvent implements IHandlerEvent<HandlerContext> {
       FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1,
           HttpResponseStatus.valueOf(HttpStatus.SC_BAD_GATEWAY),
           byteBuf);
-      GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
-      gatewayContext.getGatewayRequest().writeResponse(httpResponse);
-      //释放资源
-      gatewayContext.releaseRequest();
+      gatewayContext.writeResponse(httpResponse);
       gatewayContext.setThrowable(e);
-      gatewayContext.setStatus(GatewayContextStatusEnum.WRITE_FLUSH);
       gatewayContext.setGatewayStatus(GatewayRequestStatusEnum.INTERNAL_ERROR);
       //发生异常返回响应信息后,跳转后置处理器执行后续逻辑,再发生异常则只记录不做业务处理
       try {

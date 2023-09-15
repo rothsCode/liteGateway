@@ -1,9 +1,9 @@
 package com.rothsCode.liteGateway.core.nettyServer.requestProcess;
 
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
-import com.rothsCode.liteGateway.core.Context.GatewayRequest;
 import com.rothsCode.liteGateway.core.config.GatewayConfigLoader;
 import com.rothsCode.liteGateway.core.config.ServerConfig;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
+import com.rothsCode.liteGateway.core.container.Context.GatewayRequest;
 import com.rothsCode.liteGateway.core.plugin.core.PluginManager;
 import com.rothsCode.liteGateway.core.plugin.metrics.memoryMetrics.StatisticsRollingNumber;
 import com.rothsCode.liteGateway.core.plugin.metrics.remoteMetrics.StatisticsTypeEnum;
@@ -18,7 +18,6 @@ import io.netty.util.ReferenceCountUtil;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,12 +28,12 @@ import org.slf4j.LoggerFactory;
  * @date 2023/8/6 21:57
  */
 @Sharable
-@Slf4j
 public class GatewayRequestHandler extends ChannelInboundHandlerAdapter {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(GatewayRequestHandler.class);
+
   private static final String CHANNEL_ROLLING_NUMBER = "CHANNEL_QPS";
-  private final ScheduledExecutorService qpsExecutor =
+  private final ScheduledExecutorService qpsPrintExecutor =
       Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("channelQPSExecutor"));
   private ServerConfig serverConfig;
   private NettyRequestProcess nettyRequestProcess;
@@ -52,11 +51,11 @@ public class GatewayRequestHandler extends ChannelInboundHandlerAdapter {
     //进行读写qps统计
     channelQPSRollingNumber = new StatisticsRollingNumber(
         CHANNEL_ROLLING_NUMBER, 10 * 1000, 10);
-    qpsExecutor.scheduleAtFixedRate(() -> {
+    qpsPrintExecutor.scheduleAtFixedRate(() -> {
       if (channelQPSRollingNumber.getRollingSum(StatisticsTypeEnum.READ) > 0) {
-        log.info("channelReadQps:{}",
+        LOGGER.info("channelReadQps:{}",
             channelQPSRollingNumber.getValues(StatisticsTypeEnum.READ));
-        log.info("channelWriteQps:{}",
+        LOGGER.info("channelWriteQps:{}",
             channelQPSRollingNumber.getValues(StatisticsTypeEnum.WRITE));
       }
     }, 10, 10, TimeUnit.SECONDS);
@@ -71,19 +70,19 @@ public class GatewayRequestHandler extends ChannelInboundHandlerAdapter {
       GatewayRequest request = new GatewayRequest();
       request.setCtx(ctx);
       request.setMsg(msg);
-      request.setChannelQPSRollingNumber(channelQPSRollingNumber);
       GatewayContext gatewayContext = new GatewayContext();
       gatewayContext.setGatewayRequest(request);
+      gatewayContext.setChannelQPSRollingNumber(channelQPSRollingNumber);
       gatewayContext.setStartTime(System.currentTimeMillis());
       gatewayContext
           .setLoadBalanceStrategy(serverConfig.getRegisterConfig().getLoadBalanceStrategy());
       gatewayContext.setClientIP(IPUtils.getClientIP(ctx, (HttpRequest) msg));
       nettyRequestProcess.processRequest(gatewayContext);
     } else {
-      log.error("not httpRequest:{}", msg.toString());
+      LOGGER.error("not httpRequest:{}", msg.toString());
       boolean releaseFlag = ReferenceCountUtil.release(msg);
       if (!releaseFlag) {
-        log.error("reference Fair:{}", msg.toString());
+        LOGGER.error("reference Fair:{}", msg.toString());
       }
     }
   }

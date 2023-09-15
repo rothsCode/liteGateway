@@ -1,11 +1,12 @@
 package com.rothsCode.liteGateway.core.pipeline.route;
 
 import cn.hutool.core.net.url.UrlBuilder;
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
-import com.rothsCode.liteGateway.core.Context.GatewayContextStatusEnum;
+import com.alibaba.fastjson.JSONObject;
 import com.rothsCode.liteGateway.core.config.GatewayConfigLoader;
 import com.rothsCode.liteGateway.core.config.ServerConfig;
 import com.rothsCode.liteGateway.core.constants.GatewayConstant;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
+import com.rothsCode.liteGateway.core.container.Context.RequestWriteStatusEnum;
 import com.rothsCode.liteGateway.core.exception.GatewayRequestStatusEnum;
 import com.rothsCode.liteGateway.core.model.Result;
 import com.rothsCode.liteGateway.core.model.ServiceInfo;
@@ -56,12 +57,15 @@ public class DiscoveryRouteEvent extends HandlerEvent {
     if (!ProtocolTypeEnum.DISCOVERY.equals(gatewayContext.getProtocol())) {
       return true;
     }
+    if (RequestWriteStatusEnum.WRITE.equals(gatewayContext.getWriteStatus())) {
+      log.error("请求重复写入跳过:{}", JSONObject.toJSONString(gatewayContext));
+      return true;
+    }
     gatewayContext.setRouteStartTime(System.currentTimeMillis());
     FullHttpRequest fullHttpRequest = (FullHttpRequest) gatewayContext.getGatewayRequest().getMsg();
     ServiceInfo serviceInfo = gatewayContext.getServiceInfo();
     String targetUrl = UrlBuilder.create().setScheme(GatewayConstant.HTTP_SCHEME)
         .setHost(serviceInfo.getIp())
-        .setHost("146.56.227.231")
         .setPort(serviceInfo.getPort())
         .addPath(fullHttpRequest.uri())
         .build();
@@ -116,11 +120,10 @@ public class DiscoveryRouteEvent extends HandlerEvent {
             Unpooled.wrappedBuffer(Result.errorGatewayError(message).toString().getBytes()));
       }
     } finally {
-      gatewayContext.getGatewayRequest().writeResponse(httpResponse);
-      gatewayContext.setStatus(GatewayContextStatusEnum.WRITE_FLUSH);
+      gatewayContext.writeResponse(httpResponse);
+      //异步线程手动触发下一个事件
+      getNext().doHandle(t);
     }
-    //异步线程手动触发下一个事件
-    getNext().doHandle(t);
   }
 
   private String subMessage(Throwable throwable, String message) {

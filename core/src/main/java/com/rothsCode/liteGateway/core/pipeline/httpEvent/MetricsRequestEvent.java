@@ -1,8 +1,8 @@
 package com.rothsCode.liteGateway.core.pipeline.httpEvent;
 
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
 import com.rothsCode.liteGateway.core.config.GatewayConfigLoader;
 import com.rothsCode.liteGateway.core.config.ServerConfig;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventEnum;
@@ -10,8 +10,6 @@ import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
 import com.rothsCode.liteGateway.core.plugin.metrics.memoryMetrics.StatisticsRollingNumber;
 import com.rothsCode.liteGateway.core.plugin.metrics.remoteMetrics.MetricsReporter;
 import com.rothsCode.liteGateway.core.plugin.metrics.remoteMetrics.StatisticsTypeEnum;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author roths
@@ -21,17 +19,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class MetricsRequestEvent extends HandlerEvent {
 
-  private static final String GLOBAL_ROLLING_NUMBER = "global";
-  private Map<String, StatisticsRollingNumber> rollingNumberMap = null;
+  private StatisticsRollingNumber globalRollingNumber;
   private ServerConfig serverConfig;
 
   public MetricsRequestEvent() {
     serverConfig = GatewayConfigLoader.getInstance().getServerConfig();
     if (!serverConfig.getMetricsEnabled()) {
-      rollingNumberMap = new ConcurrentHashMap<>(16);
-      StatisticsRollingNumber statisticsRollingNumber = new StatisticsRollingNumber(
-          GLOBAL_ROLLING_NUMBER, 60 * 1000, 60);
-      rollingNumberMap.put(GLOBAL_ROLLING_NUMBER, statisticsRollingNumber);
+      globalRollingNumber = new StatisticsRollingNumber("global", 60 * 1000, 60);
     }
   }
 
@@ -42,26 +36,16 @@ public class MetricsRequestEvent extends HandlerEvent {
     if (serverConfig.getMetricsEnabled()) {
       metricsRequestReporter(gatewayContext);
     } else {
-      statisticsRollingNumber(gatewayContext);
+      statisticsGatewayRequest(gatewayContext, globalRollingNumber);
     }
     return true;
   }
 
-  private void statisticsRollingNumber(GatewayContext gatewayContext) {
-    StatisticsRollingNumber statisticsRollingNumber = rollingNumberMap.get(GLOBAL_ROLLING_NUMBER);
-    //提取统计值放入环形数组
-    statisticsGatewayRequest(gatewayContext, statisticsRollingNumber);
-    StatisticsRollingNumber apiRollingNumber = rollingNumberMap.get(gatewayContext.getUrlPath());
-    if (apiRollingNumber == null) {
-      //考虑性能窗口区间取一分钟,10个时间窗口
-      apiRollingNumber = new StatisticsRollingNumber(gatewayContext.getUrlPath(), 60 * 1000 * 10,
-          10);
-      rollingNumberMap.put(gatewayContext.getUrlPath(), apiRollingNumber);
-    }
-    //接口维度
-    statisticsGatewayRequest(gatewayContext, apiRollingNumber);
-  }
-
+  /**
+   * prometheus数据上报
+   *
+   * @param gatewayContext
+   */
   private void metricsRequestReporter(GatewayContext gatewayContext) {
     //整体维度
     MetricsReporter
@@ -83,6 +67,12 @@ public class MetricsRequestEvent extends HandlerEvent {
             gatewayContext.getRouteStartTime() - gatewayContext.getStartTime());
   }
 
+  /**
+   * 内存数据统计
+   *
+   * @param gatewayContext
+   * @param statisticsRollingNumber
+   */
   private void statisticsGatewayRequest(GatewayContext gatewayContext,
       StatisticsRollingNumber statisticsRollingNumber) {
     statisticsRollingNumber.increment(StatisticsTypeEnum.TOTAL);

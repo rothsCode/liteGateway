@@ -1,4 +1,4 @@
-package com.rothsCode.liteGateway.core.quene;
+package com.rothsCode.liteGateway.core.plugin.process.quene;
 
 import com.google.common.base.Preconditions;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;

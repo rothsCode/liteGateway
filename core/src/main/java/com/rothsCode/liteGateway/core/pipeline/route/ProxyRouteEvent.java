@@ -1,11 +1,12 @@
 package com.rothsCode.liteGateway.core.pipeline.route;
 
 import cn.hutool.core.net.url.UrlBuilder;
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
-import com.rothsCode.liteGateway.core.Context.GatewayContextStatusEnum;
+import com.alibaba.fastjson.JSONObject;
 import com.rothsCode.liteGateway.core.config.GatewayConfigLoader;
 import com.rothsCode.liteGateway.core.config.ServerConfig;
 import com.rothsCode.liteGateway.core.constants.GatewayConstant;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
+import com.rothsCode.liteGateway.core.container.Context.RequestWriteStatusEnum;
 import com.rothsCode.liteGateway.core.exception.GatewayRequestStatusEnum;
 import com.rothsCode.liteGateway.core.model.Result;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
@@ -38,6 +39,7 @@ import org.slf4j.LoggerFactory;
 public class ProxyRouteEvent extends HandlerEvent {
 
   public static final Logger log = LoggerFactory.getLogger(ProxyRouteEvent.class);
+
   private ServerConfig serverConfig;
 
   private IAsyncHttpClient asyncHttpClient;
@@ -54,6 +56,10 @@ public class ProxyRouteEvent extends HandlerEvent {
     FullHttpRequest fullHttpRequest = (FullHttpRequest) gatewayContext.getGatewayRequest().getMsg();
     //跳过调用
     if (!ProtocolTypeEnum.PROXY.equals(gatewayContext.getProtocol())) {
+      return true;
+    }
+    if (RequestWriteStatusEnum.WRITE.equals(gatewayContext.getWriteStatus())) {
+      log.error("请求重复写入跳过:{}", JSONObject.toJSONString(gatewayContext));
       return true;
     }
     gatewayContext.setRouteStartTime(System.currentTimeMillis());
@@ -112,13 +118,11 @@ public class ProxyRouteEvent extends HandlerEvent {
       }
     } finally {
       //写回响应
-      gatewayContext.getGatewayRequest().writeResponse(httpResponse);
-      //释放资源
-      gatewayContext.releaseRequest();
-      gatewayContext.setStatus(GatewayContextStatusEnum.WRITE_FLUSH);
+      gatewayContext.writeResponse(httpResponse);
+      //异步线程手动触发下一个事件
+      getNext().doHandle(t);
     }
-    //异步线程手动触发下一个事件
-    getNext().doHandle(t);
+
   }
 
   private String subMessage(Throwable throwable, String message) {

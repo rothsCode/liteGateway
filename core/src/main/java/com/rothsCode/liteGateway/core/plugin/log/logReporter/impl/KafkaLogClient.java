@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * @author roths
- * @Description: 日志搜集客户端
+ * @Description: kafka日志搜集客户端
  * @date 2023/9/5 13:59
  */
 public class KafkaLogClient<T> implements Plugin, LogReporter {
@@ -92,7 +92,7 @@ public class KafkaLogClient<T> implements Plugin, LogReporter {
     props.put(ProducerConfig.MAX_BLOCK_MS_CONFIG, blockMs);
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, serializerClass);
     props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, serializerClass);
-    LOGGER.info("has init");
+    LOGGER.info("KafkaLogClient has been initialized");
   }
 
   /**

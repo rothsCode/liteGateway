@@ -2,7 +2,7 @@ package com.rothsCode.liteGateway.core.pipeline.httpEvent;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
 import com.rothsCode.liteGateway.core.exception.GatewayException;
 import com.rothsCode.liteGateway.core.exception.GatewayRequestStatusEnum;
 import com.rothsCode.liteGateway.core.model.FlowRule;
@@ -18,6 +18,8 @@ import com.rothsCode.liteGateway.core.util.URLUtil;
 import io.netty.handler.codec.http.FullHttpRequest;
 import java.util.List;
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author roths
@@ -26,6 +28,7 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class RateLimitEvent extends HandlerEvent {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(RateLimitEvent.class);
   @Override
   public boolean actualProcess(HandlerContext t) throws GatewayException {
     GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
@@ -37,38 +40,53 @@ public class RateLimitEvent extends HandlerEvent {
     }
     Assert.notEmpty(path, "路径为空");
     gatewayContext.setUrlPath(path);
+    FlowControlManager flowControlManager = FlowControlManager.getInstance();
     //全局资源如果没超，则继续判断单一资源量
     boolean acquireFlag = true;
-    FlowControl globalFlowControl = FlowControlManager.getInstance().getFLowControl(
+    FlowControl globalFlowControl = flowControlManager.getFLowControl(
         RateLimitResourceTypeEnum.GLOBAL.getCode());
     if (globalFlowControl != null) {
       acquireFlag = globalFlowControl.acquire();
     }
     //url patten
     if (acquireFlag) {
-      List<FlowRule> flowRules = FlowControlManager.getInstance()
-          .getFLowRuleByType(RateLimitResourceTypeEnum.URL.getCode());
-      if (CollectionUtil.isNotEmpty(flowRules)) {
-        for (FlowRule flowRule : flowRules) {
-          if (URLUtil.matchURL(flowRule.getResourceValue(), gatewayContext.getUrlPath())) {
-            FlowControl flowControl = FlowControlManager.getInstance()
-                .getFLowControl(flowRule.getResourceValue());
-            if (flowControl != null) {
-              acquireFlag = flowControl.acquire();
+      //从缓存中判断是否匹配
+      Boolean mathStatus = flowControlManager.getMatchStatus(gatewayContext.getUrlPath());
+      if (mathStatus == null || mathStatus) {
+        FlowControl pathFlowControl = flowControlManager
+            .getFlowControlByRateLimitValue(gatewayContext.getUrlPath());
+        if (pathFlowControl == null) {
+          List<FlowRule> flowRules = flowControlManager
+              .getFLowRuleByType(RateLimitResourceTypeEnum.URL.getCode());
+          Boolean matchStatus = Boolean.FALSE;
+          if (CollectionUtil.isNotEmpty(flowRules)) {
+            for (FlowRule flowRule : flowRules) {
+              if (URLUtil.matchURL(flowRule.getResourceValue(), gatewayContext.getUrlPath())) {
+                matchStatus = Boolean.TRUE;
+                //命中则缓存化提升性能
+                flowControlManager
+                    .putRateLimitValue(gatewayContext.getUrlPath(), flowRule.getResourceValue());
+                pathFlowControl = flowControlManager
+                    .getFLowControl(flowRule.getResourceValue());
+                break;
+              }
             }
-            break;
           }
+          flowControlManager.putRateLimitMatch(gatewayContext.getUrlPath(), matchStatus);
+        }
+        if (pathFlowControl != null) {
+          acquireFlag = pathFlowControl.acquire();
         }
       }
     }
     //ip patten
     if (acquireFlag) {
-      List<FlowRule> flowRules = FlowControlManager.getInstance()
+      List<FlowRule> flowRules = flowControlManager
           .getFLowRuleByType(RateLimitResourceTypeEnum.IP.getCode());
       if (CollectionUtil.isNotEmpty(flowRules)) {
         for (FlowRule flowRule : flowRules) {
           if (IPMatcher.match(flowRule.getResourceValue(), gatewayContext.getClientIP())) {
-            FlowControl flowControl = FlowControlManager.getInstance()
+            FlowControl flowControl = flowControlManager
                 .getFLowControl(flowRule.getResourceValue());
             if (flowControl != null) {
               acquireFlag = flowControl.acquire();
@@ -82,7 +100,7 @@ public class RateLimitEvent extends HandlerEvent {
     if (acquireFlag) {
       String user = fullHttpRequest.headers().get(RateLimitResourceTypeEnum.USER.getCode());
       if (StringUtils.isNotBlank(user)) {
-        FlowControl flowControl = FlowControlManager.getInstance().getFLowControl(user);
+        FlowControl flowControl = flowControlManager.getFLowControl(user);
         if (flowControl != null) {
           acquireFlag = flowControl.acquire();
         }

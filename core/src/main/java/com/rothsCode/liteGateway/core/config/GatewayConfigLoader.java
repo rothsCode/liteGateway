@@ -27,8 +27,9 @@ import org.apache.commons.lang3.StringUtils;
 public class GatewayConfigLoader {
 
   private static final GatewayConfigLoader configLoader = new GatewayConfigLoader();
-  private static final String DEV_CONFIG_FILE = "/application-local.properties";
-  private static final String PRO_CONFIG_FILE = "/application-dev.properties";
+  private static final String LOCAL_CONFIG_FILE = "/application-local.properties";
+  private static final String DEV_CONFIG_FILE = "/application-dev.properties";
+  private static final String PRO_CONFIG_FILE = "/application-pro.properties";
   /**
    * 网关配置信息
    */
@@ -61,12 +62,11 @@ public class GatewayConfigLoader {
   }
 
   public ServerConfig loadConfig() {
+    String configFile = LOCAL_CONFIG_FILE;
     String env = System.getenv("profile");
-    if (StringUtils.isBlank(env)) {
-      env = "local";
-    }
-    String configFile = DEV_CONFIG_FILE;
-    if (PRO_CONFIG_FILE.contains(env)) {
+    if ("dev".equals(env)) {
+      configFile = DEV_CONFIG_FILE;
+    } else if ("pro".equals(env)) {
       configFile = PRO_CONFIG_FILE;
     }
     //加载配置文件
@@ -135,6 +135,9 @@ public class GatewayConfigLoader {
 
 
   public GatewayDyamicConfig loadRemoteJSONConfig(String content) {
+    if (StringUtils.isEmpty(content)) {
+      return new GatewayDyamicConfig();
+    }
     GatewayDyamicConfig gatewayDyamicConfig = JSONObject
         .parseObject(content, GatewayDyamicConfig.class);
     //dubbo路由配置

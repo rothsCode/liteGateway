@@ -31,6 +31,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Prometheus metric register.
@@ -38,6 +40,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class PrometheusMetricsRegister implements MetricsRegister, Plugin {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusMetricsRegister.class);
   private static final Map<String, Counter> COUNTER_MAP = new ConcurrentHashMap<>();
 
   private static final Map<String, Gauge> GAUGE_MAP = new ConcurrentHashMap<>();
@@ -164,9 +167,10 @@ public final class PrometheusMetricsRegister implements MetricsRegister, Plugin 
     }
     if (prometheusPort > 0) {
       try {
-        server = new HTTPServer("localhost", prometheusPort);
+        server = new HTTPServer(prometheusHost, prometheusPort);
       } catch (IOException e) {
-        e.printStackTrace();
+        LOGGER.error("prometheus start error:{}", e);
+        registered.set(false);
       }
     }
   }

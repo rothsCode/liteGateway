@@ -48,6 +48,7 @@ public class DefaultLogCollector implements LogCollector, Plugin {
 
   @Override
   public void init() {
+    //获取具体的日志搜集客户端
     Plugin logPluginClient = PluginManager.getInstance()
         .getPluginByName(serverConfig.getLogClientType());
     Assert.notNull(logPluginClient, "日志客户端不存在");
@@ -59,7 +60,7 @@ public class DefaultLogCollector implements LogCollector, Plugin {
     logBlockingQueue = new LinkedBlockingQueue<>(serverConfig.getLogQueueSize());
     collectLogService = Executors
         .newSingleThreadExecutor(new ThreadFactoryImpl("collectLogServiceThread"));
-    LOGGER.info("DefaultLogCollector has init");
+    LOGGER.info("DefaultLogCollector has been initialized");
   }
 
   @Override
@@ -75,7 +76,15 @@ public class DefaultLogCollector implements LogCollector, Plugin {
       try {
         GatewayRequestLog gatewayRequestLog = logBlockingQueue.take();
         logReporter.reportLog(gatewayRequestLog);
-        //获取具体的日志搜集客户端
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+      }
+    }
+    //关闭时消费队列中剩余数据
+    while (logBlockingQueue.remainingCapacity() > 0) {
+      try {
+        GatewayRequestLog gatewayRequestLog = logBlockingQueue.take();
+        logReporter.reportLog(gatewayRequestLog);
       } catch (InterruptedException e) {
         Thread.currentThread().interrupt();
       }
@@ -87,6 +96,7 @@ public class DefaultLogCollector implements LogCollector, Plugin {
   public void shutDown() {
     logBlockingQueue.clear();
     collectLogService.shutdown();
+    startStatus.set(false);
   }
 
   @Override

@@ -16,6 +16,15 @@ import lombok.Data;
 @Data
 public class ServerConfig {
 
+  //注册中心配置
+  private RegisterConfig registerConfig;
+
+  //配置中心配置
+  private ConfigCenterConfig configCenterConfig;
+
+  //netty服务端配置
+  private NettyConfig nettyConfig;
+
   /**
    * 是否开启ssl
    */
@@ -36,22 +45,23 @@ public class ServerConfig {
    * ssl证书类型
    */
   public String keyStoreType;
-  //注册中心配置
-  private RegisterConfig registerConfig;
-  //配置中心配置
-  private ConfigCenterConfig configCenterConfig;
 
-  //	Http Async 参数选项：
-  //netty服务端配置
-  private NettyConfig nettyConfig;
-  //cache
+
+  /**
+   * cache数量
+   */
   private Long cacheMaxSize = 1024L;
-  //过期时间 单位秒
+
+  /**
+   * 缓存过期时间
+   */
   private Long expireTime = 1000L;
+
   /**
    * 项目名
    */
   private String applicationName;
+
   /**
    * http客户端
    */
@@ -68,6 +78,7 @@ public class ServerConfig {
   private int httpConnectionsPerHost = 80000;
   //	客户端空闲连接超时时间, 默认60秒
   private int httpPooledConnectionIdleTimeout = 60 * 1000;
+
   /**
    * 请求处理器类型 默认disruptorProcess
    */
@@ -80,10 +91,13 @@ public class ServerConfig {
    * 处理器使用的线程数
    */
   private int processThreadSize = Runtime.getRuntime().availableProcessors();
+
   /**
    * 处理器等待模式
    */
   private String processWaitStrategy = "blocking";
+
+
   /**
    * redis模式  standalone sentinel  cluster
    */
@@ -111,15 +125,15 @@ public class ServerConfig {
   /**
    * prometheus host
    */
-  private String prometheusHost;
+  private String prometheusHost = "localhost";
   /**
    * prometheus port
    */
-  private int prometheusPort;
+  private int prometheusPort = 9100;
   /**
    * 开启日志收集
    */
-  private Boolean logCollectEnabled = true;
+  private Boolean logCollectEnabled = false;
   /**
    * 日志容器大小
    */
@@ -144,10 +158,7 @@ public class ServerConfig {
    * 日志文件名
    */
   private String logFileName = "gateway";
-  /**
-   * 是否只记录错误日志
-   */
-  private Boolean onlyAppenderError = true;
+
   /**
    * 是否开启权限校验
    */

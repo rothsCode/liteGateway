@@ -13,7 +13,7 @@ public class HandlerChainEngineFactory {
   /**
    * 处理链
    */
-  private static Map<String, HandlerChainEngine> CHAIN_ENGINE_MAP = new HashMap<>(4);
+  private static Map<String, HandlerChainEngine> CHAIN_ENGINE_MAP = new HashMap<>();
 
   /**
    * 获取事件链

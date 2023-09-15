@@ -4,11 +4,9 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.rothsCode.liteGateway.core.Context.GatewayContext;
-import com.rothsCode.liteGateway.core.Context.GatewayContextStatusEnum;
 import com.rothsCode.liteGateway.core.config.GatewayConfigLoader;
 import com.rothsCode.liteGateway.core.config.ServerConfig;
-import com.rothsCode.liteGateway.core.exception.GatewayRequestStatusEnum;
+import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventEnum;
@@ -20,7 +18,6 @@ import com.rothsCode.liteGateway.core.plugin.log.logCollector.GatewayRequestLog;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.QueryStringDecoder;
 import java.util.Date;
-import org.apache.http.HttpStatus;
 import org.asynchttpclient.netty.NettyResponse;
 
 /**
@@ -55,14 +52,6 @@ public class LogRequestEvent extends HandlerEvent {
   private GatewayRequestLog buildGatewayLog(HandlerContext t) {
     GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
     gatewayContext.setEndTime(System.currentTimeMillis());
-    gatewayContext.setStatus(GatewayContextStatusEnum.END);
-    //判断是否是成功请求
-    if (serverConfig.getOnlyAppenderError()) {
-      if (GatewayRequestStatusEnum.SUCCESS.equals(gatewayContext.getGatewayStatus())
-          && HttpStatus.SC_OK == gatewayContext.getResponseStatus()) {
-        return null;
-      }
-    }
     FullHttpRequest fullHttpRequest = (FullHttpRequest) gatewayContext.getGatewayRequest().getMsg();
     GatewayRequestLog gatewayRequestLog = GatewayRequestLog.builder()
         .requestBody(fullHttpRequest.content().toString(UTF_8))
@@ -73,7 +62,7 @@ public class LogRequestEvent extends HandlerEvent {
         .path(gatewayContext.getUrlPath())
         .queryParams(new QueryStringDecoder(fullHttpRequest.uri()).rawQuery())
         .rpcType(gatewayContext.getProtocol().getCode())
-        .gatewayStatus(gatewayContext.getStatus().getCode())
+        .gatewayStatus(gatewayContext.getWriteStatus().getCode())
         .traceId(gatewayContext.getTraceId())
         .module(gatewayContext.getServiceName())
         .requestTime(DateUtil.formatDateTime(new Date()))
