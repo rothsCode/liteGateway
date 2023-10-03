@@ -3,21 +3,23 @@ package com.rothsCode.liteGateway.core.pipeline.httpEvent;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import cn.hutool.core.collection.CollectionUtil;
-import cn.hutool.core.lang.Assert;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONArray;
 import com.rothsCode.liteGateway.core.config.GatewayConfigLoader;
 import com.rothsCode.liteGateway.core.config.remoteConfig.GatewayDyamicConfig;
 import com.rothsCode.liteGateway.core.constants.GatewayHeaderConstant;
 import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
+import com.rothsCode.liteGateway.core.exception.GatewayRequestStatusEnum;
+import com.rothsCode.liteGateway.core.exception.RouteRequestException;
 import com.rothsCode.liteGateway.core.model.DubboRouteRule;
 import com.rothsCode.liteGateway.core.model.DubboServiceInvoker;
 import com.rothsCode.liteGateway.core.model.ProxyRouteRule;
+import com.rothsCode.liteGateway.core.model.ServiceRouteRule;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventEnum;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
-import com.rothsCode.liteGateway.core.pipeline.enums.ProtocolTypeEnum;
+import com.rothsCode.liteGateway.core.pipeline.enums.RouteTypeEnum;
 import io.netty.handler.codec.http.FullHttpRequest;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.handler.codec.http.QueryStringDecoder;
@@ -25,54 +27,79 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 
 
 /**
  * @author roths
- * @Description: 请求参数校验执行事件
+ * @Description: 请求参数解析路由匹配事件 路由解析规则,默认http服务解析,根据请求头routeType类型来判断, 路由匹配目前只支持全匹配和后缀/**匹配,不支持/aa/**
+ * 和/aa/fff 同时存在
  * @date 2023/8/13 21:42
  */
-public class ParseHttpRequestEvent extends HandlerEvent {
+public class RouteParseRequestEvent extends HandlerEvent {
 
+  @SneakyThrows
   @Override
   public boolean actualProcess(HandlerContext t) {
     GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
     FullHttpRequest fullHttpRequest = (FullHttpRequest) gatewayContext.getGatewayRequest().getMsg();
     fullHttpRequest.headers().add(GatewayHeaderConstant.TRACE_ID, gatewayContext.getTraceId());
-    //优先从dubbo路由规则中查询,匹配到则为dubbo调用，否则为http调用
     GatewayDyamicConfig gatewayDyamicConfig = GatewayConfigLoader.getInstance()
         .getGatewayDyamicConfig();
-    DubboRouteRule dubboRouteRule = gatewayDyamicConfig.getDubboRouteRuleMap()
-        .get(gatewayContext.getUrlPath());
-    if (dubboRouteRule != null) {
-      buildDubboInvoker(gatewayContext, fullHttpRequest, gatewayContext.getUrlPath(),
-          dubboRouteRule);
-    } else {
-      //查询代理配置判断协议类型
-      //查询代理映射关系
-      Map<String, ProxyRouteRule> proxyRouteRuleMap = gatewayDyamicConfig.getProxyRouteRuleMap();
-      if (CollectionUtil.isNotEmpty(proxyRouteRuleMap)) {
-        ProxyRouteRule proxyRouteRule = proxyRouteRuleMap.get(gatewayContext.getUrlPath());
-        if (proxyRouteRule != null) {
-          gatewayContext.setProtocol(ProtocolTypeEnum.PROXY);
-          gatewayContext.setProxyRouteRule(proxyRouteRule);
-          return true;
-        }
-      }
-      gatewayContext.setProtocol(ProtocolTypeEnum.DISCOVERY);
-      //默认取路径前缀作为服务名,请求头限定以及配置优先
-      String serviceName = fullHttpRequest.headers().get(GatewayHeaderConstant.SERVICE_NAME);
-      //取url前缀
-      if (StringUtils.isEmpty(serviceName)) {
-        String url = fullHttpRequest.uri();
-        serviceName = StringUtils.substringBetween(url, "/", "/");
-        gatewayContext.setServiceName(serviceName);
-      }
-      Assert.notEmpty(serviceName, "服务名不存在");
+    RouteTypeEnum routeType = RouteTypeEnum
+        .getByCode(fullHttpRequest.headers().get(GatewayHeaderConstant.ROUTE_TYPE));
+    switch (routeType) {
+      case DUBBO:
+        dubboRouteMatch(gatewayContext, fullHttpRequest, gatewayDyamicConfig);
+        break;
+      case URL_PROXY:
+        urlProxyMatch(gatewayContext, gatewayDyamicConfig);
+        break;
+      default:
+        httpServiceRouteMatch(gatewayContext, gatewayDyamicConfig);
     }
-
     return true;
+  }
+
+  private void httpServiceRouteMatch(GatewayContext gatewayContext,
+      GatewayDyamicConfig gatewayDyamicConfig) throws RouteRequestException {
+    //默认取路径前缀作为服务名
+    if (gatewayDyamicConfig.getHttpServiceRouteRadixTree() == null) {
+      String serviceName = StringUtils.substringBefore(gatewayContext.getUrlPath(), "/");
+      gatewayContext.setServiceName(serviceName);
+    } else {
+      ServiceRouteRule serviceRouteRule = gatewayDyamicConfig.getHttpServiceRouteRadixTree()
+          .findValueByKey(gatewayContext.getUrlPath());
+      if (serviceRouteRule == null) {
+        throw new RouteRequestException(GatewayRequestStatusEnum.NOT_MATCH_ROUTE);
+      }
+      gatewayContext.setServiceName(serviceRouteRule.getServiceName());
+    }
+    gatewayContext.setRouteType(RouteTypeEnum.HTTP_SERVICE);
+  }
+
+  private void urlProxyMatch(GatewayContext gatewayContext, GatewayDyamicConfig gatewayDyamicConfig)
+      throws RouteRequestException {
+    ProxyRouteRule proxyRouteRule = gatewayDyamicConfig.getProxyRadixTree()
+        .findValueByKey(gatewayContext.getUrlPath());
+    if (proxyRouteRule == null) {
+      throw new RouteRequestException(GatewayRequestStatusEnum.NOT_MATCH_ROUTE);
+    }
+    gatewayContext.setRouteType(RouteTypeEnum.URL_PROXY);
+    gatewayContext.setProxyRouteRule(proxyRouteRule);
+  }
+
+  private void dubboRouteMatch(GatewayContext gatewayContext, FullHttpRequest fullHttpRequest,
+      GatewayDyamicConfig gatewayDyamicConfig) throws RouteRequestException {
+    DubboRouteRule dubboRouteRule = gatewayDyamicConfig.getDubboRouteRadixTree()
+        .findValueByKey(gatewayContext.getUrlPath());
+    if (dubboRouteRule == null) {
+      throw new RouteRequestException(GatewayRequestStatusEnum.NOT_MATCH_ROUTE);
+    }
+    gatewayContext.setRouteType(RouteTypeEnum.DUBBO);
+    buildDubboInvoker(gatewayContext, fullHttpRequest, gatewayContext.getUrlPath(),
+        dubboRouteRule);
   }
 
   /**
@@ -85,7 +112,6 @@ public class ParseHttpRequestEvent extends HandlerEvent {
    */
   private void buildDubboInvoker(GatewayContext gatewayContext, FullHttpRequest fullHttpRequest,
       String path, DubboRouteRule dubboRouteRule) {
-    gatewayContext.setProtocol(ProtocolTypeEnum.DUBBO);
     DubboServiceInvoker dubboServiceInvoker = DubboServiceInvoker.builder()
         .interfaceName(dubboRouteRule.getInterfaceName())
         .methodName(dubboRouteRule.getMethodName())

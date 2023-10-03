@@ -45,12 +45,12 @@ public class ServerContainer implements LifeCycle {
     //异步线程加载服务信息缓存
     fetchRegisterInfoExecutor.scheduleAtFixedRate(() -> {
       fetchRegisterService.fetchRegisterService(false);
-    }, 0, 5, TimeUnit.MINUTES);
+    }, 0, 10, TimeUnit.HOURS);
     fetchConfigService = FetchConfigFactory.create(serverConfig.getConfigCenterConfig());
     //异步线程加载动态配置信息缓存
     fetchConfigInfoExecutor.scheduleAtFixedRate(() -> {
       fetchConfigService.fetchConfig();
-    }, 0, 10, TimeUnit.MINUTES);
+    }, 0, 10, TimeUnit.HOURS);
 
     //插件初始化
     PluginManager.getInstance().getPlugins().forEach(Plugin::init);

@@ -38,18 +38,24 @@ import org.slf4j.LoggerFactory;
  * Prometheus metric register.
  */
 
-public final class PrometheusMetricsRegister implements MetricsRegister, Plugin {
+public class PrometheusMetricsRegister implements MetricsRegister, Plugin {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusMetricsRegister.class);
+
   private static final Map<String, Counter> COUNTER_MAP = new ConcurrentHashMap<>();
 
   private static final Map<String, Gauge> GAUGE_MAP = new ConcurrentHashMap<>();
 
   private static final Map<String, Histogram> HISTOGRAM_MAP = new ConcurrentHashMap<>();
+
   private final AtomicBoolean registered = new AtomicBoolean(false);
+
   private HTTPServer server;
+
   private String prometheusHost;
+
   private int prometheusPort;
+
   private ServerConfig serverConfig;
 
   @Override
@@ -168,6 +174,7 @@ public final class PrometheusMetricsRegister implements MetricsRegister, Plugin 
     if (prometheusPort > 0) {
       try {
         server = new HTTPServer(prometheusHost, prometheusPort);
+        LOGGER.info("prometheus:{} started", prometheusHost + ":" + prometheusPort);
       } catch (IOException e) {
         LOGGER.error("prometheus start error:{}", e);
         registered.set(false);

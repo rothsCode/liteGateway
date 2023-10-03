@@ -4,8 +4,8 @@ import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
 import com.rothsCode.liteGateway.core.container.Context.RequestWriteStatusEnum;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerChainEngineFactory;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
+import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventTypeEnum;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
-import com.rothsCode.liteGateway.core.pipeline.enums.HandleTypeEnum;
 import com.rothsCode.liteGateway.core.util.MdcUtil;
 import com.rothsCode.liteGateway.core.util.SnowFlake;
 
@@ -25,7 +25,7 @@ public class NettyDefaultRequestProcess implements NettyRequestProcess {
     gatewayContext.setTraceId(traceId);
     HandlerContext handlerContext = new HandlerContext();
     handlerContext.put(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode(), gatewayContext);
-    HandlerChainEngineFactory.getHandlerChainEngine(HandleTypeEnum.HTTP_REQUEST.getCode())
+    HandlerChainEngineFactory.getHandlerChainEngine(HandleEventTypeEnum.ALL.getCode())
         .processEvent(handlerContext);
   }
 }

@@ -13,7 +13,7 @@ import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventEnum;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
-import com.rothsCode.liteGateway.core.pipeline.enums.ProtocolTypeEnum;
+import com.rothsCode.liteGateway.core.pipeline.enums.RouteTypeEnum;
 import com.rothsCode.liteGateway.core.plugin.core.PluginManager;
 import com.rothsCode.liteGateway.core.plugin.httpClient.IAsyncHttpClient;
 import io.netty.buffer.ByteBuf;
@@ -55,24 +55,24 @@ public class ProxyRouteEvent extends HandlerEvent {
     GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
     FullHttpRequest fullHttpRequest = (FullHttpRequest) gatewayContext.getGatewayRequest().getMsg();
     //跳过调用
-    if (!ProtocolTypeEnum.PROXY.equals(gatewayContext.getProtocol())) {
+    if (!RouteTypeEnum.URL_PROXY.equals(gatewayContext.getRouteType())) {
       return true;
     }
     if (RequestWriteStatusEnum.WRITE.equals(gatewayContext.getWriteStatus())) {
-      log.error("请求重复写入跳过:{}", JSONObject.toJSONString(gatewayContext));
+      log.error("request repeat write skip:{}", JSONObject.toJSONString(gatewayContext));
       return true;
     }
-    gatewayContext.setRouteStartTime(System.currentTimeMillis());
     String targetUrl = UrlBuilder.create().setScheme(GatewayConstant.HTTP_SCHEME)
         .setHost(gatewayContext.getProxyRouteRule().getHostName())
         .setPort(gatewayContext.getProxyRouteRule().getPort())
-        .addPath(gatewayContext.getProxyRouteRule().getApiPath())
+        .addPath(gatewayContext.getUrlPath())
         .build();
     RequestBuilder requestBuilder = new RequestBuilder();
     requestBuilder.setUrl(targetUrl);
     requestBuilder.setMethod(fullHttpRequest.method().name());
     requestBuilder.setHeaders(fullHttpRequest.headers());
     requestBuilder.setBody(fullHttpRequest.content().nioBuffer());
+    gatewayContext.setRouteStartTime(System.currentTimeMillis());
     //异步调用
     CompletableFuture<Response> future = asyncHttpClient.executeRequest(requestBuilder.build());
     //异步处理返回结果

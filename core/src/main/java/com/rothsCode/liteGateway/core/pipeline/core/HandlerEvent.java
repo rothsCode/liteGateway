@@ -5,7 +5,7 @@ import com.rothsCode.liteGateway.core.container.Context.RequestWriteStatusEnum;
 import com.rothsCode.liteGateway.core.exception.GatewayException;
 import com.rothsCode.liteGateway.core.exception.GatewayRequestStatusEnum;
 import com.rothsCode.liteGateway.core.model.Result;
-import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventEnum;
+import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventTypeEnum;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -34,29 +34,6 @@ public abstract class HandlerEvent implements IHandlerEvent<HandlerContext> {
   public HandlerEvent getNext() {
     return next;
   }
-
-  public HandlerEvent postProcess;
-
-  /**
-   * 获取后置处理器 默认PROXY_ROUTE_EVENT之后的事件都为后置事件
-   *
-   * @return
-   */
-  public HandlerEvent getPostProcess() {
-    if (postProcess != null) {
-      return postProcess;
-    }
-    HandlerEvent temNext = next;
-    while (temNext != null && !temNext.handleEvent().equals(HandleEventEnum.PROXY_ROUTE_EVENT)) {
-      temNext = temNext.next;
-    }
-    if (temNext == null) {
-      return null;
-    }
-    postProcess = temNext.next;
-    return postProcess;
-  }
-
   /**
    * 事件链当前节点如果报错则抛出异常
    *
@@ -92,13 +69,12 @@ public abstract class HandlerEvent implements IHandlerEvent<HandlerContext> {
       gatewayContext.setGatewayStatus(GatewayRequestStatusEnum.INTERNAL_ERROR);
       //发生异常返回响应信息后,跳转后置处理器执行后续逻辑,再发生异常则只记录不做业务处理
       try {
-        HandlerEvent postEvent = getPostProcess();
-        if (postEvent != null) {
-          postEvent.doHandle(t);
-        }
+        HandlerChainEngineFactory.getHandlerChainEngine(HandleEventTypeEnum.POST.getCode())
+            .processEvent(t);
       } catch (Throwable postThrowable) {
         log.error("postChain error:{}", postThrowable);
       }
+      return;
     }
     if (continueFlag && next != null) {
       next.doHandle(t);

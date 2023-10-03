@@ -1,29 +1,29 @@
 package com.rothsCode.liteGateway.core.pipeline.enums;
 
 /**
- * rothscode 协议类型
+ * rothscode 执行类型枚举
  */
-public enum ProtocolTypeEnum {
-  DISCOVERY("discovery", "服务发现调用"),
-  DUBBO("dubbo", "dubbo调用"),
-  PROXY("proxy", "代理调用"),
-  UNKNOWN("UNKNOWN", "未知");
+public enum HandleEventTypeEnum {
+  PRE("pre", "前置事件"),
+  MID("mid", "中置事件"),
+  POST("post", "后置事件"),
+  ALL("all", "所有事件链");
 
   private String code;
   private String desc;
 
-  ProtocolTypeEnum(String code, String desc) {
+  HandleEventTypeEnum(String code, String desc) {
     this.code = code;
     this.desc = desc;
   }
 
   public static String getNameByCode(String code) {
-    for (ProtocolTypeEnum e : ProtocolTypeEnum.values()) {
+    for (HandleEventTypeEnum e : HandleEventTypeEnum.values()) {
       if (e.getCode().equals(code)) {
         return e.getDesc();
       }
     }
-    return UNKNOWN.getDesc();
+    return null;
   }
 
   public String getCode() {

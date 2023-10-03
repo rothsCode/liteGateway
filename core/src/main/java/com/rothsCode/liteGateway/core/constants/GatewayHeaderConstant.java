@@ -14,4 +14,6 @@ public class GatewayHeaderConstant {
   public static final String USER_NAME = "userName";
 
   public static final String TRACE_ID = "traceId";
+
+  public static final String ROUTE_TYPE = "routeType";
 }

@@ -12,7 +12,7 @@ import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventEnum;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
-import com.rothsCode.liteGateway.core.pipeline.enums.ProtocolTypeEnum;
+import com.rothsCode.liteGateway.core.pipeline.enums.RouteTypeEnum;
 import com.rothsCode.liteGateway.core.util.DubboInvokeHelper;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -45,11 +45,11 @@ public class DubboRouteEvent extends HandlerEvent {
   public boolean actualProcess(HandlerContext t) {
     GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
     FullHttpRequest fullHttpRequest = (FullHttpRequest) gatewayContext.getGatewayRequest().getMsg();
-    if (!ProtocolTypeEnum.DUBBO.equals(gatewayContext.getProtocol())) {
+    if (!RouteTypeEnum.DUBBO.equals(gatewayContext.getRouteType())) {
       return true;
     }
     if (RequestWriteStatusEnum.WRITE.equals(gatewayContext.getWriteStatus())) {
-      log.error("请求重复写入跳过:{}", JSONObject.toJSONString(gatewayContext));
+      log.error("request repeat write skip:{}", JSONObject.toJSONString(gatewayContext));
       return true;
     }
     DubboServiceInvoker dubboServiceInvoker = gatewayContext.getDubboServiceInvoker();

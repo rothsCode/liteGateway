@@ -1,18 +1,15 @@
 package com.rothsCode.liteGateway.core.plugin.log.logCollector;
 
 import cn.hutool.core.lang.Assert;
+import com.lmax.disruptor.dsl.ProducerType;
 import com.rothsCode.liteGateway.core.config.GatewayConfigLoader;
 import com.rothsCode.liteGateway.core.config.ServerConfig;
 import com.rothsCode.liteGateway.core.plugin.core.Plugin;
 import com.rothsCode.liteGateway.core.plugin.core.PluginEnum;
 import com.rothsCode.liteGateway.core.plugin.core.PluginManager;
 import com.rothsCode.liteGateway.core.plugin.log.logReporter.LogReporter;
-import com.rothsCode.liteGateway.core.util.ThreadFactoryImpl;
+import com.rothsCode.liteGateway.core.plugin.process.quene.DisruptorFlusher;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,12 +22,16 @@ import org.slf4j.LoggerFactory;
 public class DefaultLogCollector implements LogCollector, Plugin {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DefaultLogCollector.class);
+
   private final AtomicBoolean startStatus = new AtomicBoolean(false);
+
+  private static final String THREAD_NAME_PREFIX = "disruptor_log_collector-";
+
   /**
-   * 缓存队列 TODO 后期优化为disruptor
+   * 缓存队列
    */
-  private BlockingQueue<GatewayRequestLog> logBlockingQueue;
-  private ExecutorService collectLogService;
+  private DisruptorFlusher<GatewayRequestLog> logCollectorDisruptor;
+
   private ServerConfig serverConfig;
 
   private LogReporter logReporter;
@@ -56,10 +57,18 @@ public class DefaultLogCollector implements LogCollector, Plugin {
       logReporter = (LogReporter) logPluginClient;
     }
     Assert.notNull(logPluginClient, "日志客户端转化失败");
-    //如果gc压力较大可改用ArrayBlockingQueue降低gc压力，同时吞吐量会下降，
-    logBlockingQueue = new LinkedBlockingQueue<>(serverConfig.getLogQueueSize());
-    collectLogService = Executors
-        .newSingleThreadExecutor(new ThreadFactoryImpl("collectLogServiceThread"));
+
+    //内存队列初始化
+    DisruptorFlusher.Builder<GatewayRequestLog> builder = new DisruptorFlusher.Builder<GatewayRequestLog>()
+        .setBufferSize(serverConfig.getLogBufferSize())
+        .setThreads(serverConfig.getLogBufferThreadSize())
+        .setProducerType(ProducerType.MULTI)
+        .setNamePrefix(THREAD_NAME_PREFIX)
+        .setWaitStrategy(serverConfig.getDisruptorWaitStrategy());
+    //注册请求消费监听器
+    DisruptorLogCollectEventListener disruptorEventProcessorListener = new DisruptorLogCollectEventListener();
+    builder.setEventListener(disruptorEventProcessorListener);
+    this.logCollectorDisruptor = builder.build();
     LOGGER.info("DefaultLogCollector has been initialized");
   }
 
@@ -68,44 +77,46 @@ public class DefaultLogCollector implements LogCollector, Plugin {
     if (!startStatus.compareAndSet(false, true)) {
       return;
     }
-    collectLogService.execute(this::consumeQueue);
-  }
-
-  public void consumeQueue() {
-    while (startStatus.get()) {
-      try {
-        GatewayRequestLog gatewayRequestLog = logBlockingQueue.take();
-        logReporter.reportLog(gatewayRequestLog);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    }
-    //关闭时消费队列中剩余数据
-    while (logBlockingQueue.remainingCapacity() > 0) {
-      try {
-        GatewayRequestLog gatewayRequestLog = logBlockingQueue.take();
-        logReporter.reportLog(gatewayRequestLog);
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
-    }
-
+    logCollectorDisruptor.start();
   }
 
   @Override
   public void shutDown() {
-    logBlockingQueue.clear();
-    collectLogService.shutdown();
+    if (logCollectorDisruptor != null) {
+      logCollectorDisruptor.shutdown();
+    }
     startStatus.set(false);
   }
 
   @Override
   public void batchCollectLog(List<GatewayRequestLog> requestLogs) {
-    logBlockingQueue.addAll(requestLogs);
+    for (GatewayRequestLog gatewayRequestLog : requestLogs) {
+      logCollectorDisruptor.add(gatewayRequestLog);
+    }
   }
 
   @Override
   public void collectLog(GatewayRequestLog gatewayRequestLog) {
-    logBlockingQueue.add(gatewayRequestLog);
+    logCollectorDisruptor.add(gatewayRequestLog);
   }
+
+
+  /**
+   * 消费日志事件
+   */
+  public class DisruptorLogCollectEventListener implements
+      DisruptorFlusher.EventListener<GatewayRequestLog> {
+
+    @Override
+    public void onEvent(GatewayRequestLog gatewayRequestLog) {
+      logReporter.reportLog(gatewayRequestLog);
+    }
+
+    @Override
+    public void onException(Throwable ex, long sequence, GatewayRequestLog gatewayRequestLog) {
+      LOGGER.error("DisruptorLogCollectEventListener consumeError:{},requestParam:{}", ex,
+          gatewayRequestLog.toString());
+    }
+  }
+
 }

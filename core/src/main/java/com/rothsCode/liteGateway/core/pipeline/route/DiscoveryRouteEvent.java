@@ -14,7 +14,7 @@ import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventEnum;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
-import com.rothsCode.liteGateway.core.pipeline.enums.ProtocolTypeEnum;
+import com.rothsCode.liteGateway.core.pipeline.enums.RouteTypeEnum;
 import com.rothsCode.liteGateway.core.plugin.core.PluginManager;
 import com.rothsCode.liteGateway.core.plugin.httpClient.IAsyncHttpClient;
 import io.netty.buffer.ByteBuf;
@@ -54,11 +54,11 @@ public class DiscoveryRouteEvent extends HandlerEvent {
   public boolean actualProcess(HandlerContext t) {
     GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
     //跳过调用
-    if (!ProtocolTypeEnum.DISCOVERY.equals(gatewayContext.getProtocol())) {
+    if (!RouteTypeEnum.HTTP_SERVICE.equals(gatewayContext.getRouteType())) {
       return true;
     }
     if (RequestWriteStatusEnum.WRITE.equals(gatewayContext.getWriteStatus())) {
-      log.error("请求重复写入跳过:{}", JSONObject.toJSONString(gatewayContext));
+      log.error("request repeat write skip:{}", JSONObject.toJSONString(gatewayContext));
       return true;
     }
     gatewayContext.setRouteStartTime(System.currentTimeMillis());

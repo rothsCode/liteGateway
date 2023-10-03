@@ -7,7 +7,7 @@ import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventEnum;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
-import com.rothsCode.liteGateway.core.pipeline.enums.ProtocolTypeEnum;
+import com.rothsCode.liteGateway.core.pipeline.enums.RouteTypeEnum;
 import com.rothsCode.liteGateway.core.pipeline.loadbalance.LoadBalanceFactory;
 import com.rothsCode.liteGateway.core.util.cache.ServiceCacheManger;
 import java.util.List;
@@ -24,7 +24,7 @@ public class LoadBalanceEvent extends HandlerEvent {
   public boolean actualProcess(HandlerContext t) {
     GatewayContext gatewayContext = t.getObject(HandleParamTypeEnum.GATEWAY_CONTEXT.getCode());
     //服务发现走路由逻辑
-    if (!ProtocolTypeEnum.DISCOVERY.equals(gatewayContext.getProtocol())) {
+    if (!RouteTypeEnum.HTTP_SERVICE.equals(gatewayContext.getRouteType())) {
       return true;
     }
     List<ServiceInfo> serviceInfoList = ServiceCacheManger.getInstance()

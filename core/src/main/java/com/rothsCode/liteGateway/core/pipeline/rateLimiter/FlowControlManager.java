@@ -1,14 +1,12 @@
 package com.rothsCode.liteGateway.core.pipeline.rateLimiter;
 
 import cn.hutool.core.collection.CollectionUtil;
-import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
 import com.rothsCode.liteGateway.core.model.FlowRule;
+import com.rothsCode.liteGateway.core.util.radixTree.IPCIDRRadixTree;
+import com.rothsCode.liteGateway.core.util.radixTree.TextRadixTree;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author roths
@@ -17,28 +15,34 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class FlowControlManager {
 
+  private static final Logger LOGGER = LoggerFactory.getLogger(FlowControlManager.class);
+
+
   private static final FlowControlManager INSTANCE = new FlowControlManager();
+
+  private TextRadixTree<FlowControl> urlRadixTree;
+
+  private IPCIDRRadixTree<FlowControl> ipcidrRadixTree;
   /**
-   * key:rateLimitValue  /xx/xx ..  Value: resourceValue
+   * 全局限流器
    */
-  private static Cache<String, String> rateLimitCache = Caffeine.newBuilder()
-      .build();
-  /**
-   * key:rateLimitValue  /xx/xx ..  Value: isMatch
-   */
-  private static Cache<String, Boolean> rateLimitMatchCache = Caffeine.newBuilder()
-      .build();
-  /**
-   * key：resourceValue
-   */
-  private Map<String, FlowControl> flowControlMap = new ConcurrentHashMap();
-  /**
-   * key  resourceType
-   */
-  private Map<String, List<FlowRule>> flowTypeMap = new ConcurrentHashMap();
+  private FlowControl globalFlowControl;
+
 
   public static FlowControlManager getInstance() {
     return INSTANCE;
+  }
+
+  public FlowControl getGlobalFlowControl() {
+    return globalFlowControl;
+  }
+
+  public IPCIDRRadixTree<FlowControl> getIpcidrRadixTree() {
+    return ipcidrRadixTree;
+  }
+
+  public TextRadixTree<FlowControl> getUrlRadixTree() {
+    return urlRadixTree;
   }
 
   /**
@@ -50,60 +54,28 @@ public class FlowControlManager {
     if (CollectionUtil.isEmpty(flowRuleList)) {
       return;
     }
-    Map<String, FlowControl> temFlowControlMap = new ConcurrentHashMap(flowControlMap.size());
-    Map<String, List<FlowRule>> temFlowTypeMap = new ConcurrentHashMap(flowTypeMap.size());
-    flowRuleList.forEach(f -> {
+    TextRadixTree<FlowControl> temUrlRadixTree = new TextRadixTree();
+    IPCIDRRadixTree<FlowControl> tempIpcidrRadixTree = new IPCIDRRadixTree<>();
+    for (FlowRule f : flowRuleList) {
       FlowControl flowControl = new FlowControl(f.getRateLimitType(), f.getResourceValue(),
           f.getMaxPermits(), f.getWarmUpPeriodAsSecond(),
           f.getMaxWaitingRequests());
-      temFlowControlMap.put(f.getResourceValue(), flowControl);
-    });
-    Map<String, List<FlowRule>> flowRuleMap = flowRuleList.stream()
-        .collect(Collectors.groupingBy(FlowRule::getResourceType));
-    temFlowTypeMap.putAll(flowRuleMap);
-    flowControlMap = temFlowControlMap;
-    flowTypeMap = temFlowTypeMap;
-  }
-
-  public FlowControl getFLowControl(String resourceValue) {
-    return flowControlMap.get(resourceValue);
-  }
-
-  public List<FlowRule> getFLowRuleByType(String resourceType) {
-    return flowTypeMap.get(resourceType);
-  }
-
-  /**
-   * TODO 前缀树匹配优化 根据限流纬度业务值获取限流器 1：未匹配到规则 2：匹配到规则但是无缓存数据
-   */
-  public FlowControl getFlowControlByRateLimitValue(String rateLimitValue) {
-    if (StringUtils.isEmpty(rateLimitValue)) {
-      return null;
+      if (RateLimitResourceTypeEnum.GLOBAL.getCode().equals(f.getResourceType())) {
+        globalFlowControl = flowControl;
+      } else if (RateLimitResourceTypeEnum.URL.getCode().equals(f.getResourceType())) {
+        temUrlRadixTree.put(f.getResourceValue(), flowControl);
+      } else if (RateLimitResourceTypeEnum.IP.getCode().equals(f.getResourceType())) {
+        try {
+          tempIpcidrRadixTree.put(f.getResourceValue(), flowControl);
+        } catch (Exception e) {
+          LOGGER.error("ipcidrRadixTree error:{}", e);
+        }
+      }
     }
-    String resourceValue = rateLimitCache.getIfPresent(rateLimitValue);
-    if (StringUtils.isNotBlank(resourceValue)) {
-      return flowControlMap.get(resourceValue);
-    }
-    return null;
+    urlRadixTree = temUrlRadixTree;
+    ipcidrRadixTree = tempIpcidrRadixTree;
   }
 
-  /**
-   * 设置匹配映射关联数据
-   */
-  public void putRateLimitValue(String rateLimitValue, String resourceValue) {
-    rateLimitCache.put(rateLimitValue, resourceValue);
-  }
-
-  /**
-   * 设置资源是否匹配
-   */
-  public void putRateLimitMatch(String rateLimitValue, Boolean isMatch) {
-    rateLimitMatchCache.put(rateLimitValue, isMatch);
-  }
-
-  public Boolean getMatchStatus(String rateLimitValue) {
-    return rateLimitMatchCache.getIfPresent(rateLimitValue);
-  }
 }
 
 

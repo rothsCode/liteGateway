@@ -1,7 +1,7 @@
 #请求链路执行事件
 com.rothsCode.liteGateway.core.pipeline.httpEvent.RateLimitEvent
-com.rothsCode.liteGateway.core.pipeline.httpEvent.ParseHttpRequestEvent
-#com.rothsCode.liteGateway.core.pipeline.httpEvent.AuthEvent
+com.rothsCode.liteGateway.core.pipeline.httpEvent.RouteParseRequestEvent
+com.rothsCode.liteGateway.core.pipeline.httpEvent.AuthEvent
 com.rothsCode.liteGateway.core.pipeline.httpEvent.LoadBalanceEvent
 com.rothsCode.liteGateway.core.pipeline.route.DiscoveryRouteEvent
 com.rothsCode.liteGateway.core.pipeline.route.DubboRouteEvent

@@ -23,6 +23,9 @@ public class FlowControl {
 
   private String resourceValue;
 
+  public String getResourceValue() {
+    return resourceValue;
+  }
 
   private AtomicInteger waitingRequests = new AtomicInteger(0);
 
@@ -47,7 +50,7 @@ public class FlowControl {
   public boolean acquire(int permits) {
     //超过最大等待队列阈值则直接拒绝
     if (isOverMaxWaitRequest()) {
-      log.info("{}waitingRequestsOver:{}", resourceValue, waitingRequests.get());
+      log.debug("{}waitingRequestsOver:{}", resourceValue, waitingRequests.get());
       return false;
     }
     boolean success = rateLimiter.tryAcquire(permits);

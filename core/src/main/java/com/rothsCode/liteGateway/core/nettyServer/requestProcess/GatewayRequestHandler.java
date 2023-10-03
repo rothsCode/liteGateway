@@ -34,7 +34,7 @@ public class GatewayRequestHandler extends ChannelInboundHandlerAdapter {
 
   private static final String CHANNEL_ROLLING_NUMBER = "CHANNEL_QPS";
   private final ScheduledExecutorService qpsPrintExecutor =
-      Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("channelQPSExecutor"));
+      Executors.newSingleThreadScheduledExecutor(new ThreadFactoryImpl("channelQPSPrintExecutor"));
   private ServerConfig serverConfig;
   private NettyRequestProcess nettyRequestProcess;
   private StatisticsRollingNumber channelQPSRollingNumber;
@@ -53,9 +53,9 @@ public class GatewayRequestHandler extends ChannelInboundHandlerAdapter {
         CHANNEL_ROLLING_NUMBER, 10 * 1000, 10);
     qpsPrintExecutor.scheduleAtFixedRate(() -> {
       if (channelQPSRollingNumber.getRollingSum(StatisticsTypeEnum.READ) > 0) {
-        LOGGER.info("channelReadQps:{}",
+        LOGGER.debug("channelReadQps:{}",
             channelQPSRollingNumber.getValues(StatisticsTypeEnum.READ));
-        LOGGER.info("channelWriteQps:{}",
+        LOGGER.debug("channelWriteQps:{}",
             channelQPSRollingNumber.getValues(StatisticsTypeEnum.WRITE));
       }
     }, 10, 10, TimeUnit.SECONDS);

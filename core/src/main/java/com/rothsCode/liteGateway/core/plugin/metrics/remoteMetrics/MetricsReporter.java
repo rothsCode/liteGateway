@@ -24,7 +24,7 @@ import java.util.Optional;
 /**
  * Metrics reporter.
  */
-public final class MetricsReporter {
+public class MetricsReporter {
 
   private static MetricsRegister metricsRegister;
 
@@ -48,6 +48,16 @@ public final class MetricsReporter {
         StatisticsTypeEnum.MAX_TIME.getDesc());
     MetricsReporter
         .registerCounter(StatisticsTypeEnum.TOTAL.getCode(), StatisticsTypeEnum.TOTAL.getDesc());
+    //百分比耗时分布
+    MetricsReporter
+        .registerHistogram(StatisticsTypeEnum.API_TIME.getCode(),
+            StatisticsTypeEnum.API_TIME.getDesc());
+    MetricsReporter
+        .registerHistogram(StatisticsTypeEnum.PRE_GATEWAY_TIME.getCode(),
+            StatisticsTypeEnum.PRE_GATEWAY_TIME.getDesc());
+    MetricsReporter
+        .registerHistogram(StatisticsTypeEnum.POST_GATEWAY_TIME.getCode(),
+            StatisticsTypeEnum.POST_GATEWAY_TIME.getDesc());
   }
 
   /**

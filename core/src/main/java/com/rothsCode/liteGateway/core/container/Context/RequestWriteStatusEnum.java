@@ -13,8 +13,9 @@ public enum RequestWriteStatusEnum {
   ENTER(1, "请求进入网关"),
   PROCESSING(2, "事件执行中"),
   WRITE(3, "响应写入到socket缓存"),
-  FLUSH_ERROR(4, "数据发送报错"),
-  FLUSH_SUCCESS(5, "数据发送成功");
+  CHANNEL_CLOSE(4, "channel通道已关闭"),
+  FLUSH_ERROR(5, "数据发送报错"),
+  FLUSH_SUCCESS(6, "数据发送成功");
   private int code;
   private String desc;
 

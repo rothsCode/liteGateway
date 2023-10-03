@@ -1,7 +1,8 @@
 <configuration>
   <!--appender的name可以随意指定，被logger的appender-ref标签引用-->
   <logger level="debug" name="io.netty"/>
-  <property name="LOG_HOME" value="/root/logs/gateway"/>
+  <property name="LOG_HOME" value="/root/log/gateway"/>
+  <property name="APP_NAME" value="gateway"/>
   <appender class="ch.qos.logback.core.ConsoleAppender" name="stdout">
     <encoder charset="UTF-8">
       <pattern>%d{yyyy-MM-dd HH:mm:ss} %5p %c:%L %m%n</pattern>

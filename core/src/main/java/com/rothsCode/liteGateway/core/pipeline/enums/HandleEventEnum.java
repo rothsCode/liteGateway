@@ -4,17 +4,16 @@ package com.rothsCode.liteGateway.core.pipeline.enums;
  * rothscode 事件类型枚举
  */
 public enum HandleEventEnum {
-  RATE_LIMIT_EVENT("rateLimit", 1, "httpRequest", "请求限流事件"),
-  PARSE_REQUEST("parseRequest", 2, "httpRequest", "解析请求参数事件"),
-  VALID_REQUEST("validRequest", 3, "httpRequest", "请求参数校验事件"),
-  AUTH_REQUEST("authRequest", 4, "httpRequest", "鉴权请求事件"),
-  LOAD_BALANCE("loadBalance", 5, "httpRequest", "负载均衡事件"),
-  DISCOVERY_ROUTE_EVENT("discoveryRoute", 6, "httpRequest", "服务发现调用事件"),
-  DUBBO_ROUTE_EVENT("dubboRoute", 7, "httpRequest", "dubbo调用事件"),
-  PROXY_ROUTE_EVENT("proxyRoute", 8, "httpRequest", "请求代理调用事件"),
-  TIME_OUT_EVENT("timeOutEvent", 9, "httpRequest", "请求超时事件"),
-  LOG_REQUEST_EVENT("logRequest", 10, "httpRequest", "日志采集事件"),
-  METRICS_REQUEST("metricsRequest", 11, "httpRequest", "请求统计分析事件");
+  RATE_LIMIT_EVENT("rateLimit", 1, HandleEventTypeEnum.PRE.getCode(), "请求限流事件"),
+  PARSE_REQUEST("parseRequest", 2, HandleEventTypeEnum.PRE.getCode(), "解析请求参数事件"),
+  VALID_REQUEST("validRequest", 3, HandleEventTypeEnum.PRE.getCode(), "请求参数校验事件"),
+  AUTH_REQUEST("authRequest", 4, HandleEventTypeEnum.PRE.getCode(), "鉴权请求事件"),
+  LOAD_BALANCE("loadBalance", 5, HandleEventTypeEnum.PRE.getCode(), "负载均衡事件"),
+  DISCOVERY_ROUTE_EVENT("discoveryRoute", 6, HandleEventTypeEnum.MID.getCode(), "服务发现调用事件"),
+  DUBBO_ROUTE_EVENT("dubboRoute", 7, HandleEventTypeEnum.MID.getCode(), "dubbo调用事件"),
+  PROXY_ROUTE_EVENT("proxyRoute", 8, HandleEventTypeEnum.MID.getCode(), "请求代理调用事件"),
+  LOG_REQUEST_EVENT("logRequest", 10, HandleEventTypeEnum.POST.getCode(), "日志采集事件"),
+  METRICS_REQUEST("metricsRequest", 11, HandleEventTypeEnum.POST.getCode(), "请求统计分析事件");
 
   private String code;
   private int sort;

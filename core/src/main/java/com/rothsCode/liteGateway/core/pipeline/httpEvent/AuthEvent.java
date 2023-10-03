@@ -20,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * @author roths
  * @Description: 鉴权事件 token校验以及黑白名单
+ * TODO 后续可优化为radix Tree结构
  * @date 2023/8/21 18:00
  */
 @Slf4j

@@ -31,10 +31,15 @@ import org.slf4j.LoggerFactory;
 public class DisruptorBatchRequestProcess implements NettyRequestProcess, Plugin {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(DisruptorBatchRequestProcess.class);
+
   private static final String THREAD_NAME_PREFIX = "disruptor_process-";
+
   private final AtomicBoolean startStatus = new AtomicBoolean(false);
+
   private ServerConfig serverConfig;
+
   private DisruptorFlusher<GatewayContext> disruptorFlusher;
+
   private NettyDefaultRequestProcess defaultRequestProcess;
 
   @Override
@@ -92,7 +97,6 @@ public class DisruptorBatchRequestProcess implements NettyRequestProcess, Plugin
    */
   public class DisruptorEventProcessorListener implements
       DisruptorFlusher.EventListener<GatewayContext> {
-
 
     @Override
     public void onEvent(GatewayContext event) {

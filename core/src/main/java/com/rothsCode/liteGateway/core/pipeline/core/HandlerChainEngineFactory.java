@@ -16,7 +16,7 @@ public class HandlerChainEngineFactory {
   private static Map<String, HandlerChainEngine> CHAIN_ENGINE_MAP = new HashMap<>();
 
   /**
-   * 获取事件链
+   * 根据事件类型获取对应事件链
    *
    * @param handleType
    * @return
@@ -30,4 +30,5 @@ public class HandlerChainEngineFactory {
     return handlerChainEngine;
 
   }
+
 }

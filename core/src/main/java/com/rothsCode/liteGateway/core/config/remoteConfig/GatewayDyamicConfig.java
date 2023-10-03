@@ -3,9 +3,9 @@ package com.rothsCode.liteGateway.core.config.remoteConfig;
 import com.rothsCode.liteGateway.core.model.DubboRouteRule;
 import com.rothsCode.liteGateway.core.model.FlowRule;
 import com.rothsCode.liteGateway.core.model.ProxyRouteRule;
+import com.rothsCode.liteGateway.core.model.ServiceRouteRule;
+import com.rothsCode.liteGateway.core.util.radixTree.TextRadixTree;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.Data;
 
 /**
@@ -38,9 +38,9 @@ public class GatewayDyamicConfig {
   private List<DubboRouteRule> dubboRouteRules;
 
   /**
-   * 数据结构后转化的规则
+   * dubbo路由规则基点树
    */
-  private Map<String, DubboRouteRule> dubboRouteRuleMap = new ConcurrentHashMap<>();
+  private TextRadixTree<DubboRouteRule> dubboRouteRadixTree;
 
   /**
    * 代理路由规则
@@ -48,12 +48,24 @@ public class GatewayDyamicConfig {
   private List<ProxyRouteRule> proxyRouteRules;
 
   /**
-   * 数据结构后转化的代理规则
+   * path Proxy SimpleRadixTree
    */
-  private Map<String, ProxyRouteRule> proxyRouteRuleMap = new ConcurrentHashMap<>();
+  private TextRadixTree<ProxyRouteRule> proxyRadixTree;
+
+  /**
+   * http服务发现路由规则
+   */
+  private List<ServiceRouteRule> httpServiceRouteRules;
+
+  /**
+   * http服务发现路由规则  SimpleRadixTree
+   */
+  private TextRadixTree<ServiceRouteRule> httpServiceRouteRadixTree;
+
 
   /**
    * 限流规则
    */
   private List<FlowRule> flowRules;
+
 }

@@ -5,7 +5,7 @@ import com.rothsCode.liteGateway.core.exception.GatewayRequestStatusEnum;
 import com.rothsCode.liteGateway.core.model.DubboServiceInvoker;
 import com.rothsCode.liteGateway.core.model.ProxyRouteRule;
 import com.rothsCode.liteGateway.core.model.ServiceInfo;
-import com.rothsCode.liteGateway.core.pipeline.enums.ProtocolTypeEnum;
+import com.rothsCode.liteGateway.core.pipeline.enums.RouteTypeEnum;
 import com.rothsCode.liteGateway.core.plugin.metrics.memoryMetrics.StatisticsRollingNumber;
 import com.rothsCode.liteGateway.core.plugin.metrics.remoteMetrics.StatisticsTypeEnum;
 import io.netty.channel.ChannelFutureListener;
@@ -72,9 +72,9 @@ public class GatewayContext {
   private DubboServiceInvoker dubboServiceInvoker;
 
   /**
-   * 调用协议
+   * 路由类型
    */
-  private ProtocolTypeEnum protocol = ProtocolTypeEnum.DISCOVERY;
+  private RouteTypeEnum routeType = RouteTypeEnum.HTTP_SERVICE;
 
   /**
    * 负载均衡策略
@@ -143,18 +143,22 @@ public class GatewayContext {
    */
   public void writeResponse(FullHttpResponse httpResponse) {
     if (RequestWriteStatusEnum.WRITE.equals(writeStatus)) {
-      LOGGER.error("响应已写入:{}", JSONObject.toJSONString(httpResponse));
+      LOGGER.error("response has writed:{}", JSONObject.toJSONString(httpResponse));
       return;
     }
     //水位控制
     writeFlow(gatewayRequest.getCtx());
+    if (!gatewayRequest.getCtx().channel().isOpen()) {
+      LOGGER.error("writeChannel has closed:{}", gatewayRequest.getCtx().channel().remoteAddress());
+      return;
+    }
     gatewayRequest.getCtx().writeAndFlush(httpResponse)
         .addListener((ChannelFutureListener) future -> {
           channelQPSRollingNumber.increment(StatisticsTypeEnum.WRITE);
           if (!future.isSuccess()) {
             this.writeStatus = RequestWriteStatusEnum.FLUSH_ERROR;
             LOGGER.error("{}:channelWrite failed {} ",
-                future.channel().remoteAddress(), future.cause().getMessage());
+                future.channel().remoteAddress(), future.cause());
           }
           this.writeStatus = RequestWriteStatusEnum.FLUSH_SUCCESS;
           future.channel().close();

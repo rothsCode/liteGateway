@@ -129,15 +129,21 @@ public class ServerConfig {
   /**
    * prometheus port
    */
-  private int prometheusPort = 9100;
+  private int prometheusPort = 9011;
   /**
    * 开启日志收集
    */
   private Boolean logCollectEnabled = false;
   /**
-   * 日志容器大小
+   * 日志缓存容器大小
    */
-  private int logQueueSize = 512;
+  private int logBufferSize = 1024;
+
+  /**
+   * 日志缓存容器线程处理大小
+   */
+  private int logBufferThreadSize = 4;
+
   /**
    * 日志搜集客户端类型
    */

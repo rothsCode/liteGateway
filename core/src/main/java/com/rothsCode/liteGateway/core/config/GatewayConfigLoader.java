@@ -1,20 +1,20 @@
 package com.rothsCode.liteGateway.core.config;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.rothsCode.liteGateway.core.config.remoteConfig.GatewayDyamicConfig;
 import com.rothsCode.liteGateway.core.model.DubboRouteRule;
 import com.rothsCode.liteGateway.core.model.FlowRule;
 import com.rothsCode.liteGateway.core.model.ProxyRouteRule;
+import com.rothsCode.liteGateway.core.model.ServiceRouteRule;
 import com.rothsCode.liteGateway.core.pipeline.rateLimiter.FlowControlManager;
 import com.rothsCode.liteGateway.core.util.PropertiesUtils;
+import com.rothsCode.liteGateway.core.util.radixTree.TextRadixTree;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 
@@ -133,27 +133,45 @@ public class GatewayConfigLoader {
     return serverConfig;
   }
 
-
-  public GatewayDyamicConfig loadRemoteJSONConfig(String content) {
+  /**
+   * 全量删除更新
+   *
+   * @param content
+   * @return
+   */
+  public synchronized GatewayDyamicConfig loadRemoteJSONConfig(String content) {
     if (StringUtils.isEmpty(content)) {
       return new GatewayDyamicConfig();
     }
     GatewayDyamicConfig gatewayDyamicConfig = JSONObject
         .parseObject(content, GatewayDyamicConfig.class);
-    //dubbo路由配置
-    Map<String, DubboRouteRule> dubboRouteRuleMap = gatewayDyamicConfig.getDubboRouteRules()
-        .stream()
-        .collect(Collectors
-            .toMap(DubboRouteRule::getApiPath, Function.identity(), (key1, key2) -> key2));
-    gatewayDyamicConfig.setDubboRouteRuleMap(dubboRouteRuleMap);
-    gatewayDyamicConfig.setDubboRouteRules(null);
-    //代理路由配置
-    Map<String, ProxyRouteRule> proxyRouteRuleMap = gatewayDyamicConfig.getProxyRouteRules()
-        .stream()
-        .collect(Collectors
-            .toMap(ProxyRouteRule::getApiPath, Function.identity(), (key1, key2) -> key2));
-    gatewayDyamicConfig.setProxyRouteRuleMap(proxyRouteRuleMap);
-    gatewayDyamicConfig.setProxyRouteRules(null);
+    //dubbo路由配置填充至radixTree
+    if (CollectionUtil.isNotEmpty(gatewayDyamicConfig.getDubboRouteRules())) {
+      TextRadixTree<DubboRouteRule> tempDubboRouteRadixTree = new TextRadixTree();
+      gatewayDyamicConfig.getDubboRouteRules().forEach(p -> {
+        tempDubboRouteRadixTree.put(p.getApiPath(), p);
+      });
+      gatewayDyamicConfig.setDubboRouteRadixTree(tempDubboRouteRadixTree);
+      gatewayDyamicConfig.setDubboRouteRules(null);
+    }
+    //服务路由配置-填充至radixTree
+    if (CollectionUtil.isNotEmpty(gatewayDyamicConfig.getHttpServiceRouteRules())) {
+      TextRadixTree<ServiceRouteRule> tempHttpServiceRouteRadixTree = new TextRadixTree();
+      gatewayDyamicConfig.getHttpServiceRouteRules().forEach(p -> {
+        tempHttpServiceRouteRadixTree.put(p.getApiPath(), p);
+      });
+      gatewayDyamicConfig.setHttpServiceRouteRadixTree(tempHttpServiceRouteRadixTree);
+      gatewayDyamicConfig.setHttpServiceRouteRules(null);
+    }
+    //代理路由配置-填充至radixTree
+    if (CollectionUtil.isNotEmpty(gatewayDyamicConfig.getProxyRouteRules())) {
+      TextRadixTree<ProxyRouteRule> tempProxyRouteRadixTree = new TextRadixTree();
+      gatewayDyamicConfig.getProxyRouteRules().forEach(p -> {
+        tempProxyRouteRadixTree.put(p.getApiPath(), p);
+      });
+      gatewayDyamicConfig.setProxyRadixTree(tempProxyRouteRadixTree);
+      gatewayDyamicConfig.setProxyRouteRules(null);
+    }
     //限流配置初始化
     List<FlowRule> flowRules = gatewayDyamicConfig.getFlowRules();
     FlowControlManager.getInstance().initFLow(flowRules);

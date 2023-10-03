@@ -3,6 +3,7 @@ package com.rothsCode.liteGateway.core.pipeline.core;
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ObjectUtil;
+import com.rothsCode.liteGateway.core.pipeline.enums.HandleEventTypeEnum;
 import com.rothsCode.liteGateway.core.pipeline.enums.HandleParamTypeEnum;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -24,7 +25,10 @@ public class HandlerChainEngine {
   /**
    * 处理事件
    */
-  private static List<HandlerEvent> chainList;
+  public List<HandlerEvent> chainList;
+
+  public String handleType;
+
 
   /**
    * 过滤当前类型的事件
@@ -33,11 +37,13 @@ public class HandlerChainEngine {
    */
   public HandlerChainEngine(String handleType) {
     Assert.notEmpty(handleType, "事件类型不可为空");
+    this.handleType = handleType;
     ServiceLoader<IHandlerEvent> handleEvents = ServiceLoader.load(IHandlerEvent.class);
     chainList = new ArrayList<>();
     for (IHandlerEvent h : handleEvents) {
       HandlerEvent handlerEvent = (HandlerEvent) h;
-      if (ObjectUtil.equal(handleType, handlerEvent.handleEvent().getEventType())) {
+      if (ObjectUtil.equal(handleType, handlerEvent.handleEvent().getEventType())
+          || ObjectUtil.equal(HandleEventTypeEnum.ALL.getCode(), handleType)) {
         chainList.add(handlerEvent);
       }
     }
@@ -56,7 +62,7 @@ public class HandlerChainEngine {
    */
   public void addHandleEvent(HandlerEvent handlerEvent) {
     if (CollectionUtil.isEmpty(chainList)) {
-      chainList = new ArrayList<>(8);
+      chainList = new ArrayList<>();
     }
     chainList.add(handlerEvent);
   }
@@ -66,7 +72,7 @@ public class HandlerChainEngine {
    *
    * @param handlerContext
    */
-  public static void processEvent(HandlerContext handlerContext) {
+  public void processEvent(HandlerContext handlerContext) {
     if (chainList.size() > 0) {
       Object handleHead = handlerContext.getObject(HandleParamTypeEnum.HANDLE_HEAD_INDEX.getCode());
       int handleHeadIndex = 0;

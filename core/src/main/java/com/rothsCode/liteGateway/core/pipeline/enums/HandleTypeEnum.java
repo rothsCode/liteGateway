@@ -4,7 +4,6 @@ package com.rothsCode.liteGateway.core.pipeline.enums;
  * rothscode 执行类型枚举
  */
 public enum HandleTypeEnum {
-  HTTP_REQUEST("httpRequest", "http请求执行事件"),
   HANDLE_HEAD_INDEX("handleHeadIndex", "执行起始节点位置"),
   UNKNOWN("UNKNOWN", "未知");
 

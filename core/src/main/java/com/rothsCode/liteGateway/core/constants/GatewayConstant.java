@@ -13,5 +13,5 @@ public class GatewayConstant {
 
   public static final String HTTP_SCHEME = "http";
 
-
+  public static final String PATH_MATCH_SYMBOL = "**";
 }

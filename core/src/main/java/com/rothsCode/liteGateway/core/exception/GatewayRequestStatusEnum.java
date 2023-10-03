@@ -9,6 +9,7 @@ package com.rothsCode.liteGateway.core.exception;
 public enum GatewayRequestStatusEnum {
 
   SUCCESS(200, "请求成功"),
+  NOT_MATCH_ROUTE(530, "没有对应的路由规则请检查"),
   INTERNAL_ERROR(540, "网关内部异常"),
   TIMEOUT(550, "网关请求超时"),
   DUBBO_ERROR(560, "dubbo調用异常"),

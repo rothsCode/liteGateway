@@ -13,6 +13,7 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.ResourceLeakDetector;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import java.net.InetSocketAddress;
 import org.slf4j.Logger;
@@ -84,6 +85,7 @@ public class NettyServer implements LifeCycle {
         .localAddress(new InetSocketAddress(nettyConfig.getPort()))
         .childHandler(customChannel);
     try {
+      ResourceLeakDetector.setLevel(ResourceLeakDetector.Level.ADVANCED);
       ChannelFuture channelFuture = server.bind().sync();
       log.info("----nettyServer:{} has started---", nettyConfig.getPort());
       channelFuture.channel().closeFuture().sync();

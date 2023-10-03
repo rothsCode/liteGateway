@@ -4,8 +4,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson.JSONObject;
-import com.rothsCode.liteGateway.core.config.GatewayConfigLoader;
-import com.rothsCode.liteGateway.core.config.ServerConfig;
 import com.rothsCode.liteGateway.core.container.Context.GatewayContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerContext;
 import com.rothsCode.liteGateway.core.pipeline.core.HandlerEvent;
@@ -28,12 +26,10 @@ import org.asynchttpclient.netty.NettyResponse;
 
 public class LogRequestEvent extends HandlerEvent {
 
-  private ServerConfig serverConfig;
 
   private DefaultLogCollector logCollector;
 
   public LogRequestEvent() {
-    serverConfig = GatewayConfigLoader.getInstance().getServerConfig();
     logCollector = (DefaultLogCollector) PluginManager.getInstance()
         .getPluginByName(PluginEnum.LOG_COLLECT.getCode());
   }
@@ -61,7 +57,7 @@ public class LogRequestEvent extends HandlerEvent {
         .method(fullHttpRequest.method().name())
         .path(gatewayContext.getUrlPath())
         .queryParams(new QueryStringDecoder(fullHttpRequest.uri()).rawQuery())
-        .rpcType(gatewayContext.getProtocol().getCode())
+        .rpcType(gatewayContext.getRouteType().getCode())
         .gatewayStatus(gatewayContext.getWriteStatus().getCode())
         .traceId(gatewayContext.getTraceId())
         .module(gatewayContext.getServiceName())
