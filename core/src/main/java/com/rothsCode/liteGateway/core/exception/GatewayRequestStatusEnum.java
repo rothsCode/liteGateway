@@ -16,6 +16,7 @@ public enum GatewayRequestStatusEnum {
   RATE_LIMIT(570, "当前访问量过大！请稍后再试"),
   SERVICE_ERROR(580, "服务調用异常"),
   REQUEST_PROCESS_ERROR(590, "请求处理异常"),
+  ES_INDEX_ERROR(591, "es索引异常")
   ;
 
   private int code;

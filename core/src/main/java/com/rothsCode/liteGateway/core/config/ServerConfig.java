@@ -166,9 +166,46 @@ public class ServerConfig {
   private String logFileName = "gateway";
 
   /**
+   * es节点地址,逗号分隔
+   */
+  private String esClusterNodes;
+
+  /**
+   * es用户名
+   */
+  private String esUserName;
+
+  /**
+   * es密码
+   */
+  private String esPassword;
+
+  /**
    * 是否开启权限校验
    */
   private Boolean authEnabled = false;
+
+  /**
+   * es分片数
+   */
+  private int esShardsNumber = 3;
+
+  /**
+   * 返回条数
+   */
+  private int returnSize = 1000;
+
+  /**
+   * 搜索返回条数
+   */
+  private int searchResultSize = 20;
+
+  /**
+   * es节点复制数
+   */
+  private int esReplicasNumber = 3;
+
+
   /**
    * 权限校验类型
    */

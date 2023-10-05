@@ -62,8 +62,11 @@ public class LogRequestEvent extends HandlerEvent {
         .traceId(gatewayContext.getTraceId())
         .module(gatewayContext.getServiceName())
         .requestTime(DateUtil.formatDateTime(new Date()))
-        .throwable(gatewayContext.getThrowable())
         .build();
+
+    if (gatewayContext.getThrowable() != null) {
+      gatewayRequestLog.setThrowable(gatewayContext.getThrowable().toString());
+    }
     if (gatewayContext.getResponse() != null) {
       if (gatewayContext.getResponse() instanceof NettyResponse) {
         NettyResponse response = (NettyResponse) gatewayContext.getResponse();

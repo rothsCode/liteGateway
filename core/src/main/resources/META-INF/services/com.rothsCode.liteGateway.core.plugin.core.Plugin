@@ -1,7 +1,7 @@
 #网关插件
 com.rothsCode.liteGateway.core.plugin.log.logReporter.impl.FileLogClient
 com.rothsCode.liteGateway.core.plugin.log.logReporter.impl.KafkaLogClient
-com.rothsCode.liteGateway.core.plugin.log.logReporter.impl.EsLogCollector
+com.rothsCode.liteGateway.core.plugin.log.logReporter.impl.EsLogCollectorClient
 com.rothsCode.liteGateway.core.plugin.metrics.remoteMetrics.PrometheusMetricsRegister
 com.rothsCode.liteGateway.core.plugin.log.logCollector.DefaultLogCollector
 com.rothsCode.liteGateway.core.plugin.process.DisruptorBatchRequestProcess

@@ -120,6 +120,18 @@
       <artifactId>lombok</artifactId>
       <groupId>org.projectlombok</groupId>
     </dependency>
+    <dependency>
+      <artifactId>elasticsearch</artifactId>
+      <groupId>org.elasticsearch</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>elasticsearch-rest-client</artifactId>
+      <groupId>org.elasticsearch.client</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>elasticsearch-rest-high-level-client</artifactId>
+      <groupId>org.elasticsearch.client</groupId>
+    </dependency>
   </dependencies>
   <description>gateway core模块</description>
   <modelVersion>4.0.0</modelVersion>

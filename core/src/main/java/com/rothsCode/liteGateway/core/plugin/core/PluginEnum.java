@@ -7,7 +7,7 @@ public enum PluginEnum {
   LOG_COLLECT("logCollect", "日志上报插件"),
   KAFKA("kafka", "kafka插件"),
   FILE_STORAGE("fileStorage", "文件存储插件"),
-  ES("es", "es上报插件"),
+  ES("elasticSearch", "elasticSearch上报插件"),
   JWT_AUTH("jwt", "jwt权限校验插件"),
   DISRUPTOR_PROCESS("disruptorProcess", "基于disruptor处理器插件"),
   ASYNC_NETTY_HTTP_CLIENT("asyncNettyHttpClient", "异步nettyhttp插件"),

@@ -65,7 +65,7 @@ public class GatewayRequestLog {
   /**
    * 网关异常
    */
-  private Throwable throwable;
+  private String throwable;
 
   private String host;
 

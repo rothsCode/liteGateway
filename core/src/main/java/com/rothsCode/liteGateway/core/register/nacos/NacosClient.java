@@ -33,8 +33,13 @@ public class NacosClient {
 
   private ConfigCenterConfig configCenterConfig;
 
-  public NacosClient() {
+  private NacosClient() {
 
+  }
+
+  private static class SingletonHolder {
+
+    private static final NacosClient INSTANCE = new NacosClient();
   }
 
   public static NacosClient getInstance() {
@@ -131,11 +136,7 @@ public class NacosClient {
     }
   }
 
-  private static class SingletonHolder {
 
-    private static final NacosClient INSTANCE = new NacosClient();
-
-  }
 
 
 }
