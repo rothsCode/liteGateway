@@ -12,10 +12,24 @@ import lombok.Data;
 public class NettyConfig {
 
   public EventLoopGroup workGroup;
+
   private boolean isUseEpoll;
+
   private int port = 9000;
+
   private int bossThreadCount = 1;
+
   private int workThreadCount;
+
+  /**
+   * 心跳过期时间
+   */
+  private int idleTimeOutSeconds = 30;
+
+  /**
+   * ssl连接流控阈值
+   */
+  private long sslShakeCounter = 50000;
   /**
    * 业务处理线程
    */

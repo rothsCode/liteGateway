@@ -3,6 +3,7 @@ package com.rothsCode.liteGateway.core.config;
 import cn.hutool.core.collection.CollectionUtil;
 import com.alibaba.fastjson.JSONObject;
 import com.rothsCode.liteGateway.core.config.remoteConfig.GatewayDyamicConfig;
+import com.rothsCode.liteGateway.core.config.ssl.SSLConfig;
 import com.rothsCode.liteGateway.core.model.DubboRouteRule;
 import com.rothsCode.liteGateway.core.model.FlowRule;
 import com.rothsCode.liteGateway.core.model.ProxyRouteRule;
@@ -90,6 +91,10 @@ public class GatewayConfigLoader {
         ConfigCenterConfig configCenterConfig = new ConfigCenterConfig();
         PropertiesUtils.properties2Object(properties, configCenterConfig, "configCenter");
         serverConfig.setConfigCenterConfig(configCenterConfig);
+        //ssl证书配置
+        SSLConfig sslConfig = new SSLConfig();
+        PropertiesUtils.properties2Object(properties, sslConfig, "ssl");
+        serverConfig.setSslConfig(sslConfig);
         //网关动态配置
         GatewayDyamicConfig gatewayDyamicConfig = new GatewayDyamicConfig();
         PropertiesUtils.properties2Object(properties, gatewayDyamicConfig, "dynamic");

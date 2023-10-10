@@ -91,8 +91,7 @@ public class GatewayRequestHandler extends ChannelInboundHandlerAdapter {
   @Override
   public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) {
     ctx.close();
-    LOGGER.error("发生错误:{}" + cause.getMessage());
-
+    LOGGER.error("exceptionCaught:{}" + cause.getMessage());
   }
 
 }

@@ -17,6 +17,16 @@
 
   <dependencyManagement>
     <dependencies>
+      <dependency>
+        <artifactId>netty-tcnative</artifactId>
+        <groupId>io.netty</groupId>
+        <version>${netty-tcnative.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>netty-tcnative-boringssl-static</artifactId>
+        <groupId>io.netty</groupId>
+        <version>${netty-tcnative.version}</version>
+      </dependency>
       <!--dubbo-->
       <dependency>
         <artifactId>dubbo</artifactId>
@@ -212,6 +222,7 @@
   <packaging>pom</packaging>
 
   <properties>
+    <netty-tcnative.version>2.0.61.Final</netty-tcnative.version>
     <elasticsearch.version>7.2.0</elasticsearch.version>
     <async-http-client.version>2.0.37</async-http-client.version>
     <biz.paluch.redis.version>4.4.6.Final</biz.paluch.redis.version>
@@ -229,7 +240,6 @@
     <junit.version>4.12</junit.version>
     <kafka.version>3.2.0</kafka.version>
     <lmax.version>3.3.4</lmax.version>
-    <log4j2.version>2.11.1</log4j2.version>
     <logback.version>1.1.7</logback.version>
     <lombok.version>1.18.0</lombok.version>
     <mapstruct.version>1.2.0.Final</mapstruct.version>
@@ -248,7 +258,6 @@
     <prometheus.version>0.11.0</prometheus.version>
     <protobuf.version>3.7.1</protobuf.version>
     <redisson.version>3.12.0</redisson.version>
-    <slf4j.version>1.7.5</slf4j.version>
     <slf4j.version>1.7.25</slf4j.version>
   </properties>
 

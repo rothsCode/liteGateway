@@ -5,6 +5,7 @@ import com.lmax.disruptor.BusySpinWaitStrategy;
 import com.lmax.disruptor.SleepingWaitStrategy;
 import com.lmax.disruptor.WaitStrategy;
 import com.lmax.disruptor.YieldingWaitStrategy;
+import com.rothsCode.liteGateway.core.config.ssl.SSLConfig;
 import com.rothsCode.liteGateway.core.plugin.core.PluginEnum;
 import lombok.Data;
 
@@ -25,27 +26,8 @@ public class ServerConfig {
   //netty服务端配置
   private NettyConfig nettyConfig;
 
-  /**
-   * 是否开启ssl
-   */
-  public Boolean sslEnabled = false;
-  /**
-   * ssl证书存储路径
-   */
-  public String keystorePath;
-  /**
-   * 证书认证密码
-   */
-  public String certificatePassword;
-  /**
-   * 证书存储密码
-   */
-  public String keystorePassword;
-  /**
-   * ssl证书类型
-   */
-  public String keyStoreType;
-
+  //证书配置
+  private SSLConfig sslConfig;
 
   /**
    * cache数量
