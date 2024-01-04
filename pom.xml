@@ -18,6 +18,27 @@
   <dependencyManagement>
     <dependencies>
       <dependency>
+        <artifactId>hbase-client</artifactId>
+        <exclusions>
+          <exclusion>
+            <artifactId>reload4j</artifactId>
+            <groupId>ch.qos.reload4j</groupId>
+          </exclusion>
+        </exclusions>
+        <groupId>org.apache.hbase</groupId>
+        <version>${hbase-client.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>commons-io</artifactId>
+        <groupId>commons-io</groupId>
+        <version>${commons-io.version}</version>
+      </dependency>
+      <dependency>
+        <artifactId>netty-tcnative</artifactId>
+        <groupId>io.netty</groupId>
+        <version>${netty-tcnative.version}</version>
+      </dependency>
+      <dependency>
         <artifactId>netty-tcnative</artifactId>
         <groupId>io.netty</groupId>
         <version>${netty-tcnative.version}</version>
@@ -222,6 +243,8 @@
   <packaging>pom</packaging>
 
   <properties>
+    <commons-io.version>2.6</commons-io.version>
+    <hbase-client.version>2.5.1</hbase-client.version>
     <netty-tcnative.version>2.0.61.Final</netty-tcnative.version>
     <elasticsearch.version>7.2.0</elasticsearch.version>
     <async-http-client.version>2.0.37</async-http-client.version>

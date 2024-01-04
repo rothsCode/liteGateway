@@ -39,6 +39,20 @@
   </build>
   <dependencies>
     <dependency>
+      <artifactId>hbase-client</artifactId>
+      <exclusions>
+        <exclusion>
+          <artifactId>reload4j</artifactId>
+          <groupId>ch.qos.reload4j</groupId>
+        </exclusion>
+      </exclusions>
+      <groupId>org.apache.hbase</groupId>
+    </dependency>
+    <dependency>
+      <artifactId>commons-io</artifactId>
+      <groupId>commons-io</groupId>
+    </dependency>
+    <dependency>
       <artifactId>redisson</artifactId>
       <groupId>org.redisson</groupId>
     </dependency>

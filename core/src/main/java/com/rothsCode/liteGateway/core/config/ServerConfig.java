@@ -187,7 +187,15 @@ public class ServerConfig {
    */
   private int esReplicasNumber = 3;
 
+  /**
+   * hbase zkAddress
+   */
+  private String hbaseZookeeperQuorum;
 
+  /**
+   * hbase zkClient port
+   */
+  private String hbaseZookeeperPort = "2181";
   /**
    * 权限校验类型
    */
